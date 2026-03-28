@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block title %}Mobile Setup – HRMS{% endblock %}
+{% block page_title %}📱 Mobile Setup{% endblock %}
+{% block breadcrumb %}Employee Mobile Access{% endblock %}
+
+{% block extra_style %}
+.qr-card { text-align: center; padding: 32px; }
+.qr-img { margin: 20px auto; border: 8px solid white; border-radius: 16px; display: inline-block; }
+.url-box { background: rgba(0,212,170,0.08); border: 2px dashed var(--accent); border-radius: 12px; padding: 20px; margin: 20px 0; font-size: 20px; font-weight: 800; color: var(--accent); word-break: break-all; }
+.steps { text-align: left; }
+.step { display: flex; gap: 16px; align-items: flex-start; padding: 16px; background: rgba(255,255,255,0.03); border-radius: 12px; margin-bottom: 10px; }
+.step-num { width: 32px; height: 32px; background: var(--accent); color: #0a0e1a; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; flex-shrink: 0; }
+{% endblock %}
+
+{% block content %}
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+  <div class="card qr-card">
+    <h3 style="margin-bottom:8px">📱 Employees के लिए Mobile URL</h3>
+    <p style="color:var(--muted);font-size:14px">नीचे QR scan करें या URL share करें</p>
+    
+    <div id="qrContainer" class="qr-img">
+      <canvas id="qrCanvas" width="200" height="200"></canvas>
+    </div>
+    
+    <div class="url-box" id="mobileUrl">Loading...</div>
+    
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button class="btn btn-primary" onclick="copyUrl()">📋 URL Copy करें</button>
+      <button class="btn btn-secondary" onclick="window.open(document.getElementById('mobileUrl').textContent.trim(), '_blank')">🔗 Open करें</button>
+    </div>
+    
+    <div style="margin-top:20px;padding:14px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:10px;font-size:13px;color:#fcd34d">
+      ⚠️ सभी devices एक ही WiFi पर होने चाहिए <br>OR ngrok URL use करें बाहर से access के लिए
+    </div>
+  </div>
+  
+  <div class="card">
+    <h3 style="margin-bottom:20px">📋 Employee को कैसे बताएं?</h3>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div>
+          <strong>WhatsApp पर URL भेजें</strong><br>
+          <span style="font-size:13px;color:var(--muted)">नीचे का URL copy करके WhatsApp group में paste करें</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div>
+          <strong>Employee browser में खोले</strong><br>
+          <span style="font-size:13px;color:var(--muted)">Chrome या Safari में URL type करें</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div>
+          <strong>Login करें</strong><br>
+          <span style="font-size:13px;color:var(--muted)">Settings में उनका username/password बनाएं</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div>
+          <strong>"Add to Home Screen" करें</strong><br>
+          <span style="font-size:13px;color:var(--muted)">Browser menu → Add to Home Screen → App icon बन जाएगा</span>
+        </div>
+      </div>
+    </div>
+    
+    <div style="margin-top:20px;padding:16px;background:rgba(0,212,170,0.06);border-radius:12px">
+      <strong style="color:var(--accent)">💬 WhatsApp Message Template:</strong>
+      <div id="waMsg" style="margin-top:10px;padding:12px;background:rgba(255,255,255,0.04);border-radius:8px;font-size:13px;line-height:1.7;color:var(--text)">Loading...</div>
+      <button class="btn btn-secondary btn-sm" style="margin-top:10px" onclick="copyWAMsg()">📋 Message Copy करें</button>
+    </div>
+  </div>
+</div>
+
+<!-- Ngrok setup card -->
+<div class="card" style="margin-top:20px">
+  <div class="card-header"><span class="card-title">🌐 Internet से Access – ngrok Setup</span></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+    <div style="padding:16px;background:rgba(255,255,255,0.03);border-radius:12px">
+      <div style="font-size:24px;margin-bottom:8px">1️⃣</div>
+      <strong>ngrok Download करें</strong>
+      <p style="font-size:13px;color:var(--muted);margin-top:6px">ngrok.com पर जाएं → Free account बनाएं → Download करें</p>
+      <a href="https://ngrok.com/download" target="_blank" class="btn btn-secondary btn-sm" style="margin-top:10px">Download →</a>
+    </div>
+    <div style="padding:16px;background:rgba(255,255,255,0.03);border-radius:12px">
+      <div style="font-size:24px;margin-bottom:8px">2️⃣</div>
+      <strong>CMD में Run करें</strong>
+      <p style="font-size:13px;color:var(--muted);margin-top:6px">HRMS चालू होने के बाद CMD में यह command:</p>
+      <div style="background:#0a0e1a;border-radius:8px;padding:10px;font-family:monospace;font-size:13px;color:var(--accent);margin-top:8px">ngrok http 5000</div>
+    </div>
+    <div style="padding:16px;background:rgba(255,255,255,0.03);border-radius:12px">
+      <div style="font-size:24px;margin-bottom:8px">3️⃣</div>
+      <strong>URL मिलेगी ऐसी</strong>
+      <p style="font-size:13px;color:var(--muted);margin-top:6px">ngrok आपको एक URL देगा:</p>
+      <div style="background:#0a0e1a;border-radius:8px;padding:10px;font-family:monospace;font-size:12px;color:#a5b4fc;margin-top:8px">https://abc123.ngrok-free.app</div>
+      <p style="font-size:12px;color:var(--muted);margin-top:6px">इसमें /mobile लगाकर share करें</p>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+  // Get current server IP
+  const localUrl = `${location.protocol}//${location.hostname}:${location.port || 5000}/mobile`;
+  document.getElementById('mobileUrl').textContent = localUrl;
+  
+  // Generate QR
+  new QRCode(document.getElementById('qrCanvas'), {
+    text: localUrl,
+    width: 200, height: 200,
+    colorDark: '#00d4aa',
+    colorLight: '#111827',
+    correctLevel: QRCode.CorrectLevel.M
+  });
+  
+  // WhatsApp template
+  document.getElementById('waMsg').innerHTML = `
+    📱 *EasySource HRMS – Attendance App*<br><br>
+    नीचे दिए link से अपनी attendance mark करें:<br>
+    🔗 *${localUrl}*<br><br>
+    • अपना username & password use करें<br>
+    • Browser में खोलें (Chrome best है)<br>
+    • "Add to Home Screen" से app बनाएं<br><br>
+    किसी भी problem के लिए admin को contact करें।`;
+
+  function copyUrl() {
+    navigator.clipboard.writeText(localUrl);
+    showToast('URL copied!');
+  }
+  
+  function copyWAMsg() {
+    const msg = `📱 *EasySource HRMS – Attendance App*\n\nनीचे दिए link से अपनी attendance mark करें:\n🔗 *${localUrl}*\n\n• अपना username & password use करें\n• Browser में खोलें (Chrome best है)\n• "Add to Home Screen" से app बनाएं`;
+    navigator.clipboard.writeText(msg);
+    showToast('WhatsApp message copied!');
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,120 @@
+<!-- ═══════════════════════════════════════════════════════
+     BASE.HTML SIDEBAR PATCH
+     "Weekly Roster" ko replace karo niche diye code se
+     
+     ORIGINAL LINE (jo dhundho):
+       <a ... href="/roster">Weekly Roster</a>
+       ya similar line jo sidebar mein roster ka link hai
+     
+     US POORI <li> KO REPLACE KARO IS CODE SE:
+════════════════════════════════════════════════════ -->
+
+<li class="nav-item roster-dropdown-item" style="position:relative;">
+  <!-- Main link - click karo to go to Roster Management -->
+  <a class="nav-link d-flex align-items-center gap-2" href="/roster?tab=roster" id="rosterNavLink">
+    <i class="bi bi-calendar-week"></i>
+    <span>Roster Management</span>
+    <i class="bi bi-chevron-down ms-auto roster-chevron" style="font-size:10px;transition:.2s;"></i>
+  </a>
+  
+  <!-- Hover dropdown -->
+  <ul class="roster-submenu" id="rosterSubmenu">
+    <li>
+      <a href="/roster?tab=roster" class="roster-sub-link" id="rlink_roster">
+        <span class="rlink-icon">&#128197;</span>
+        <span>Roster Management</span>
+      </a>
+    </li>
+    <li>
+      <a href="/roster?tab=rules" class="roster-sub-link" id="rlink_rules">
+        <span class="rlink-icon">&#128203;</span>
+        <span>Roster Rules Template</span>
+      </a>
+    </li>
+    <li>
+      <a href="/roster?tab=mapping" class="roster-sub-link" id="rlink_mapping">
+        <span class="rlink-icon">&#128101;</span>
+        <span>Employee Mapping</span>
+      </a>
+    </li>
+  </ul>
+</li>
+
+<!-- ADD THIS CSS inside <style> in base.html or in a <style> tag before </head> -->
+<style id="rosterSidebarCSS">
+/* Roster dropdown submenu */
+.roster-submenu {
+  list-style: none;
+  padding: 4px 0;
+  margin: 0;
+  display: none;
+  background: rgba(255,255,255,0.06);
+  border-left: 3px solid #0d6efd;
+  margin-left: 12px;
+  border-radius: 0 6px 6px 0;
+}
+.roster-dropdown-item:hover .roster-submenu,
+.roster-dropdown-item:focus-within .roster-submenu {
+  display: block;
+}
+.roster-dropdown-item:hover .roster-chevron {
+  transform: rotate(180deg);
+}
+.roster-sub-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px 7px 12px;
+  color: rgba(255,255,255,0.75);
+  text-decoration: none;
+  font-size: 13px;
+  transition: .15s;
+  border-radius: 0 6px 6px 0;
+}
+.roster-sub-link:hover {
+  background: rgba(13,110,253,0.25);
+  color: #fff;
+}
+.roster-sub-link.active-sub {
+  background: #0d6efd;
+  color: #fff;
+  font-weight: 600;
+}
+.rlink-icon { font-size: 14px; width: 20px; text-align: center; }
+</style>
+
+<!-- ADD THIS JS before </body> in base.html -->
+<script id="rosterSidebarJS">
+(function(){
+  // Highlight active sub-link based on current URL
+  function highlightRosterNav() {
+    var params = new URLSearchParams(window.location.search);
+    var tab    = params.get('tab') || 'roster';
+    var isRosterPage = window.location.pathname === '/roster';
+    
+    // Show submenu if on roster page
+    if(isRosterPage) {
+      var menu = document.getElementById('rosterSubmenu');
+      if(menu) menu.style.display = 'block';
+    }
+    
+    // Highlight active sub-link
+    ['roster','rules','mapping'].forEach(function(t) {
+      var el = document.getElementById('rlink_' + t);
+      if(!el) return;
+      if(isRosterPage && tab === t) {
+        el.classList.add('active-sub');
+      } else {
+        el.classList.remove('active-sub');
+      }
+    });
+  }
+  
+  // Run on page load
+  if(document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', highlightRosterNav);
+  } else {
+    highlightRosterNav();
+  }
+})();
+</script>

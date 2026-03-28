@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+{% block title %}Dashboard – EasySource HRMS{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block breadcrumb %}Good day, {{ session.name }} 👋{% endblock %}
+
+{% block extra_style %}
+.stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:18px}
+.stat-card{background:rgba(15,20,35,.85);border:1px solid var(--border);border-radius:14px;padding:18px;position:relative;overflow:hidden;transition:all .22s;cursor:default}
+.stat-card:hover{transform:translateY(-2px);border-color:var(--border2);box-shadow:0 10px 28px rgba(0,0,0,.3)}
+.sc-glow{position:absolute;width:110px;height:110px;border-radius:50%;filter:blur(38px);opacity:.17;top:-18px;right:-18px;pointer-events:none}
+.sc-teal .sc-glow{background:#00c896}.sc-green .sc-glow{background:#4caf50}.sc-red .sc-glow{background:#f44336}.sc-yellow .sc-glow{background:#ff9800}.sc-blue .sc-glow{background:#3d5afe}.sc-purple .sc-glow{background:#7c3aed}
+.stat-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
+.stat-ico{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.sc-teal .stat-ico{background:rgba(0,200,150,.14)}.sc-green .stat-ico{background:rgba(76,175,80,.14)}.sc-red .stat-ico{background:rgba(244,67,54,.14)}.sc-yellow .stat-ico{background:rgba(255,152,0,.14)}.sc-blue .stat-ico{background:rgba(61,90,254,.14)}.sc-purple .stat-ico{background:rgba(124,58,237,.14)}
+.s-tag{font-size:9.5px;padding:2px 7px;border-radius:20px;font-weight:700}
+.stat-num{font-size:32px;font-weight:800;letter-spacing:-.03em;font-family:'JetBrains Mono',monospace;line-height:1}
+.sc-teal .stat-num{color:var(--accent)}.sc-green .stat-num{color:#69db7c}.sc-red .stat-num{color:#ff6b6b}.sc-yellow .stat-num{color:#ffb74d}.sc-blue .stat-num{color:#7aa2f7}.sc-purple .stat-num{color:#c4b5fd}
+.stat-lbl{font-size:11.5px;color:var(--text2);margin-top:5px;font-weight:500}
+.s-bar{height:2.5px;border-radius:2px;margin-top:12px;background:rgba(255,255,255,.06);overflow:hidden}
+.s-bar-fill{height:100%;border-radius:2px;transition:width 1.2s ease}
+.sc-teal .s-bar-fill{background:var(--accent)}.sc-green .s-bar-fill{background:#4caf50}.sc-red .s-bar-fill{background:#f44336}.sc-yellow .s-bar-fill{background:#ff9800}.sc-blue .s-bar-fill{background:#3d5afe}.sc-purple .s-bar-fill{background:#7c3aed}
+.bot-grid{display:grid;grid-template-columns:1fr 420px;gap:16px}
+.qa-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.qa-btn{display:flex;align-items:center;gap:12px;padding:13px 14px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:11px;cursor:pointer;transition:all .18s;text-decoration:none;color:var(--text)}
+.qa-btn:hover{background:rgba(0,200,150,.07);border-color:rgba(0,200,150,.28);transform:translateY(-1px)}
+.qa-ico{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.qa-t{font-size:13px;font-weight:600}.qa-s{font-size:10.5px;color:var(--muted);margin-top:1px}
+.donut-wrap{display:flex;align-items:center;justify-content:center;gap:24px;padding:14px 0}
+.donut{position:relative;width:108px;height:108px}
+.donut svg{transform:rotate(-90deg)}
+.donut-lbl{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.d-num{font-size:22px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--accent)}
+.d-txt{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-top:1px}
+.legend{display:flex;flex-direction:column;gap:10px}
+.leg{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--text2)}
+.leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.leg-val{margin-left:auto;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13.5px;min-width:28px;text-align:right}
+/* Office cards */
+.office-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:18px}
+.office-card{background:rgba(15,20,35,.85);border:1px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;transition:all .18s}
+.office-card:hover,.office-card.active{border-color:var(--accent);background:rgba(0,200,150,.06);transform:translateY(-1px)}
+.office-card.active{box-shadow:0 0 0 1px rgba(0,200,150,.3)}
+.oc-name{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px}
+.oc-stats{display:flex;gap:10px;flex-wrap:wrap}
+.oc-stat{font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px}
+/* Filters row */
+.dash-filters{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px;padding:12px 16px;background:rgba(255,255,255,.025);border:1px solid var(--border);border-radius:10px}
+.df-label{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.07em}
+{% endblock %}
+
+{% block content %}
+<!-- DATE RANGE + OFFICE FILTER BAR -->
+<div class="dash-filters">
+  <span class="df-label">📅 Date Range:</span>
+  <input type="date" class="form-control" id="dashFrom" style="width:150px">
+  <span style="color:var(--muted);font-size:13px">to</span>
+  <input type="date" class="form-control" id="dashTo" style="width:150px">
+  <span class="df-label" style="margin-left:8px">🏢 Office:</span>
+  <select class="form-control" id="dashOffice" style="width:200px" onchange="refreshDashboard()">
+    <option value="">All Offices</option>
+    <option>Head Office Delhi</option>
+    <option>Branch Office Gurgaon</option>
+    <option>Client Side</option>
+    <option>Work From Home</option>
+    <option>Field</option>
+  </select>
+  <button class="btn btn-primary btn-sm" onclick="refreshDashboard()">🔄 Refresh</button>
+  <span id="dashDateLabel" style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-left:auto"></span>
+</div>
+
+<!-- STATS ROW -->
+<div class="stats-grid">
+  <div class="stat-card sc-teal">
+    <div class="sc-glow"></div>
+    <div class="stat-top"><div class="stat-ico">👥</div><span class="s-tag" style="background:rgba(0,200,150,.14);color:var(--accent)">Active</span></div>
+    <div class="stat-num" id="sTotal">—</div>
+    <div class="stat-lbl">Total Employees</div>
+    <div class="s-bar"><div class="s-bar-fill" style="width:100%"></div></div>
+  </div>
+  <div class="stat-card sc-green">
+    <div class="sc-glow"></div>
+    <div class="stat-top"><div class="stat-ico">✅</div><span class="s-tag" style="background:rgba(76,175,80,.14);color:#69db7c">Range</span></div>
+    <div class="stat-num" id="sP" style="color:#69db7c">—</div>
+    <div class="stat-lbl">Present Days</div>
+    <div class="s-bar"><div class="s-bar-fill" id="bP" style="width:0%"></div></div>
+  </div>
+  <div class="stat-card sc-red">
+    <div class="sc-glow"></div>
+    <div class="stat-top"><div class="stat-ico">✖</div><span class="s-tag" style="background:rgba(244,67,54,.14);color:#ff6b6b">Range</span></div>
+    <div class="stat-num" id="sA" style="color:#ff6b6b">—</div>
+    <div class="stat-lbl">Absent Days</div>
+    <div class="s-bar"><div class="s-bar-fill" id="bA" style="width:0%"></div></div>
+  </div>
+  <div class="stat-card sc-yellow">
+    <div class="sc-glow"></div>
+    <div class="stat-top"><div class="stat-ico">🚗</div><span class="s-tag" style="background:rgba(255,152,0,.14);color:#ffb74d">Range</span></div>
+    <div class="stat-num" id="sOD" style="color:#ffb74d">—</div>
+    <div class="stat-lbl">On Duty</div>
+    <div class="s-bar"><div class="s-bar-fill" id="bOD" style="width:0%"></div></div>
+  </div>
+  <div class="stat-card sc-purple">
+    <div class="sc-glow"></div>
+    <div class="stat-top"><div class="stat-ico">🏖️</div><span class="s-tag" style="background:rgba(124,58,237,.14);color:#c4b5fd">Range</span></div>
+    <div class="stat-num" id="sL" style="color:#c4b5fd">—</div>
+    <div class="stat-lbl">On Leave</div>
+    <div class="s-bar"><div class="s-bar-fill" id="bL" style="width:0%;background:#7c3aed"></div></div>
+  </div>
+</div>
+
+<!-- OFFICE SETTING CARDS -->
+<div style="margin-bottom:8px;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">
+  🏢 Office-wise Attendance (Today)
+</div>
+<div class="office-grid" id="officeGrid">
+  <div style="color:var(--muted);font-size:12px;padding:10px">Loading...</div>
+</div>
+
+<!-- BOTTOM GRID -->
+<div class="bot-grid">
+  <div class="card">
+    <div class="card-header"><span class="card-title">⚡ Quick Actions</span></div>
+    <div class="qa-grid">
+      <a href="/attendance" class="qa-btn"><div class="qa-ico" style="background:rgba(0,200,150,.13)">📅</div><div><div class="qa-t">Attendance</div><div class="qa-s">Mark today</div></div></a>
+      <a href="/employees" class="qa-btn"><div class="qa-ico" style="background:rgba(61,90,254,.13)">👤</div><div><div class="qa-t">Employees</div><div class="qa-s">Manage team</div></div></a>
+      <a href="/whatsapp" class="qa-btn"><div class="qa-ico" style="background:rgba(76,175,80,.13)">💬</div><div><div class="qa-t">WhatsApp</div><div class="qa-s">Send message</div></div></a>
+      <a href="/reports" class="qa-btn"><div class="qa-ico" style="background:rgba(255,152,0,.13)">📊</div><div><div class="qa-t">Reports</div><div class="qa-s">Export data</div></div></a>
+      <a href="/roster" class="qa-btn"><div class="qa-ico" style="background:rgba(124,58,237,.13)">📋</div><div><div class="qa-t">Roster</div><div class="qa-s">Weekly shifts</div></div></a>
+      {% if session.role=='admin' %}<a href="/settings" class="qa-btn"><div class="qa-ico" style="background:rgba(244,67,54,.13)">⚙️</div><div><div class="qa-t">Settings</div><div class="qa-s">Manage users</div></div></a>{% endif %}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">📊 Attendance Breakup</span>
+      <span id="donutLabel" style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace"></span>
+    </div>
+    <div class="donut-wrap" id="donutWrap"><div style="color:var(--muted);font-size:12.5px">Loading...</div></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Default: current month
+const today = new Date();
+const y = today.getFullYear(), m = String(today.getMonth()+1).padStart(2,'0');
+const todayStr = today.toISOString().slice(0,10);
+const monthStart = `${y}-${m}-01`;
+document.getElementById('dashFrom').value = monthStart;
+document.getElementById('dashTo').value   = todayStr;
+
+async function refreshDashboard() {
+  const from   = document.getElementById('dashFrom').value || monthStart;
+  const to     = document.getElementById('dashTo').value   || todayStr;
+  const office = document.getElementById('dashOffice').value;
+  document.getElementById('dashDateLabel').textContent = from + ' → ' + to;
+
+  const data = await api('/api/dashboard/stats', { from_date: from, to_date: to, office_setting: office || null });
+
+  // Update stat cards
+  document.getElementById('sTotal').textContent = data.total_emp;
+  document.getElementById('sP').textContent  = data.present;
+  document.getElementById('sA').textContent  = data.absent;
+  document.getElementById('sOD').textContent = data.od;
+  document.getElementById('sL').textContent  = data.leave;
+
+  const total = data.present + data.absent + data.od + data.leave || 1;
+  setTimeout(()=>{
+    document.getElementById('bP').style.width  = (data.present/total*100)+'%';
+    document.getElementById('bA').style.width  = (data.absent/total*100)+'%';
+    document.getElementById('bOD').style.width = (data.od/total*100)+'%';
+    document.getElementById('bL').style.width  = (data.leave/total*100)+'%';
+  }, 200);
+
+  // Donut chart
+  renderDonut(data.present, data.absent, data.od, data.leave, data.total_emp);
+  document.getElementById('donutLabel').textContent = from === to ? from : from + ' → ' + to;
+
+  // Office cards
+  renderOfficeCards(data.office_stats, office);
+}
+
+function renderDonut(p, a, od, l, total) {
+  const r=46, cx=54, cy=54, circ=2*Math.PI*r;
+  const marked = p+a+od+l;
+  const segs=[
+    {v:p,  col:'#4caf50',tc:'#69db7c',lbl:'Present'},
+    {v:a,  col:'#f44336',tc:'#ff6b6b',lbl:'Absent'},
+    {v:od, col:'#ff9800',tc:'#ffb74d',lbl:'On Duty'},
+    {v:l,  col:'#7c3aed',tc:'#c4b5fd',lbl:'Leave'},
+  ].filter(s=>s.v>0);
+  const unmkd = Math.max(0, total - marked);
+  if(unmkd>0) segs.push({v:unmkd, col:'#2d3748', tc:'#4a5568', lbl:'Unmarked'});
+  const tot2 = segs.reduce((s,x)=>s+x.v,0)||1;
+  let off=0;
+  let svg=`<svg width="108" height="108" viewBox="0 0 108 108"><circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#1a2338" stroke-width="11"/>`;
+  segs.forEach(s=>{const d=s.v/tot2*circ;svg+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${s.col}" stroke-width="11" stroke-dasharray="${d} ${circ-d}" stroke-dashoffset="${-off}" stroke-linecap="round" opacity=".92"/>`;off+=d});
+  svg+='</svg>';
+  const legs = segs.map(s=>`<div class="leg"><div class="leg-dot" style="background:${s.col}"></div><span>${s.lbl}</span><span class="leg-val" style="color:${s.tc}">${s.v}</span></div>`).join('');
+  document.getElementById('donutWrap').innerHTML=`<div class="donut">${svg}<div class="donut-lbl"><div class="d-num">${marked}</div><div class="d-txt">Marked</div></div></div><div class="legend">${legs}</div>`;
+}
+
+function renderOfficeCards(officeStats, activeFilter) {
+  const el = document.getElementById('officeGrid');
+  if(!officeStats || !officeStats.length){
+    el.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:10px">No data</div>';
+    return;
+  }
+  const colors = {
+    'Head Office Delhi':    {bg:'rgba(122,162,247,.1)', border:'rgba(122,162,247,.25)', txt:'#7aa2f7'},
+    'Branch Office Gurgaon':{bg:'rgba(74,222,128,.1)',  border:'rgba(74,222,128,.25)',  txt:'#4ade80'},
+    'Client Side':          {bg:'rgba(255,183,77,.1)',  border:'rgba(255,183,77,.25)',  txt:'#ffb74d'},
+    'Work From Home':       {bg:'rgba(165,180,252,.1)', border:'rgba(165,180,252,.25)', txt:'#a5b4fc'},
+    'Field':                {bg:'rgba(251,146,60,.1)',  border:'rgba(251,146,60,.25)',  txt:'#fb923c'},
+  };
+  el.innerHTML = officeStats.map(o => {
+    const c = colors[o.name] || {bg:'rgba(255,255,255,.04)',border:'rgba(255,255,255,.1)',txt:'var(--text2)'};
+    const pct = o.total ? Math.round(o.present/o.total*100) : 0;
+    const isActive = activeFilter === o.name;
+    return `<div class="office-card ${isActive?'active':''}" style="border-color:${c.border};background:${c.bg}"
+      onclick="document.getElementById('dashOffice').value='${o.name}';refreshDashboard()">
+      <div class="oc-name" style="color:${c.txt}">${o.name}</div>
+      <div style="font-size:22px;font-weight:800;font-family:'JetBrains Mono',monospace;color:${c.txt};margin-bottom:6px">${o.total}</div>
+      <div class="oc-stats">
+        <span class="oc-stat" style="background:rgba(76,175,80,.15);color:#69db7c">✅ ${o.present}</span>
+        <span class="oc-stat" style="background:rgba(244,67,54,.15);color:#ff6b6b">✖ ${o.absent}</span>
+        ${o.od ? `<span class="oc-stat" style="background:rgba(255,152,0,.15);color:#ffb74d">🚗 ${o.od}</span>` : ''}
+        ${o.leave ? `<span class="oc-stat" style="background:rgba(124,58,237,.15);color:#c4b5fd">🏖️ ${o.leave}</span>` : ''}
+      </div>
+      <div style="margin-top:8px;height:3px;border-radius:2px;background:rgba(255,255,255,.06)">
+        <div style="height:100%;border-radius:2px;background:${c.txt};width:${pct}%;transition:width 1s ease"></div>
+      </div>
+      <div style="font-size:10px;color:var(--muted);margin-top:4px">${pct}% attendance</div>
+    </div>`;
+  }).join('');
+}
+
+// Initial load
+refreshDashboard();
+</script>
+{% endblock %}

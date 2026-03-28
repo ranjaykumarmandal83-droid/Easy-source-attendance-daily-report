@@ -1,0 +1,534 @@
+{% extends "base.html" %}
+{% block title %}WhatsApp – HRMS{% endblock %}
+{% block page_title %}WhatsApp Messaging{% endblock %}
+{% block breadcrumb %}Group Messages & Scheduler{% endblock %}
+
+{% block extra_style %}
+.wa-top { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-bottom:18px; }
+.wa-bot { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+.grp-list { display:flex; flex-direction:column; gap:8px; max-height:260px; overflow-y:auto; }
+.grp-row {
+  display:flex; align-items:center; gap:10px;
+  padding:10px 14px; border-radius:10px;
+  background:rgba(255,255,255,.03); border:1px solid var(--border);
+  cursor:pointer; transition:all .15s;
+}
+.grp-row:hover { border-color:var(--accent); background:rgba(0,200,150,.06); }
+.grp-row.selected { background:rgba(0,200,150,.12); border-color:var(--accent); }
+.grp-avatar {
+  width:34px; height:34px; border-radius:50%;
+  background:rgba(0,200,150,.18); display:flex;
+  align-items:center; justify-content:center; font-size:16px; flex-shrink:0;
+}
+.grp-name { font-size:13px; font-weight:600; color:var(--text); }
+.grp-phone { font-size:11px; color:var(--muted); }
+.grp-del { margin-left:auto; background:none; border:none; color:var(--muted);
+  cursor:pointer; font-size:14px; padding:4px; border-radius:6px; transition:.15s; }
+.grp-del:hover { color:#f44336; background:rgba(244,67,54,.1); }
+.tpl-box {
+  background:rgba(0,0,0,.3); border:1px solid var(--border);
+  border-radius:10px; padding:16px;
+  font-family:'JetBrains Mono',monospace; font-size:12px;
+  line-height:1.8; color:var(--text); white-space:pre-wrap;
+  max-height:300px; overflow-y:auto;
+}
+.sched-row {
+  display:flex; align-items:center; gap:10px;
+  padding:10px 14px; border-radius:10px;
+  background:rgba(255,255,255,.03); border:1px solid var(--border);
+  margin-bottom:8px;
+}
+.sched-info { flex:1; min-width:0; }
+.sched-grp { font-size:12px; font-weight:700; color:var(--accent); }
+.sched-time { font-size:11px; color:var(--muted); margin-top:2px; }
+.sched-msg { font-size:12px; color:var(--text2); margin-top:3px;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.badge-daily { font-size:10px; padding:2px 7px; border-radius:20px;
+  background:rgba(79,70,229,.2); color:#a5b4fc; margin-left:6px; }
+.toggle { position:relative; width:40px; height:22px; flex-shrink:0; }
+.toggle input { opacity:0; width:0; height:0; }
+.slider { position:absolute; inset:0; background:rgba(255,255,255,.1);
+  border-radius:22px; cursor:pointer; transition:.2s; }
+.slider::before { content:''; position:absolute; width:16px; height:16px;
+  left:3px; bottom:3px; background:white; border-radius:50%; transition:.2s; }
+input:checked + .slider { background:var(--accent); }
+input:checked + .slider::before { transform:translateX(18px); }
+.msg-card { background:rgba(255,255,255,.03); border:1px solid var(--border);
+  border-radius:10px; padding:12px; margin-bottom:8px; }
+.msg-meta { display:flex; justify-content:space-between; margin-bottom:5px; }
+.msg-group { font-size:12px; font-weight:600; color:var(--accent); }
+.msg-time { font-size:11px; color:var(--muted); }
+.msg-text { font-size:12.5px; color:var(--text); line-height:1.5; }
+.msg-by { font-size:11px; color:var(--muted); margin-top:5px; }
+.status-sent { color:#69db7c; }
+.status-scheduled { color:#fcd34d; }
+{% endblock %}
+
+{% block content %}
+
+<!-- ROW 1: Template Generator | Group Manager -->
+<div class="wa-top">
+
+  <!-- Template Generator -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">📊 Attendance Report Template</span>
+    </div>
+
+    <!-- Required Fields -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div class="form-group" style="margin:0">
+        <label style="display:flex;align-items:center;gap:5px">
+          Date <span style="color:#ff6b6b;font-size:10px;font-weight:700;background:rgba(244,67,54,.15);padding:1px 5px;border-radius:4px;border:1px solid rgba(244,67,54,.25)">Required</span>
+        </label>
+        <input class="form-control" type="date" id="reportDate" required>
+      </div>
+      <div class="form-group" style="margin:0">
+        <label style="display:flex;align-items:center;gap:5px">
+          Office Setting <span style="color:#ffb74d;font-size:10px;font-weight:700;background:rgba(255,152,0,.12);padding:1px 5px;border-radius:4px;border:1px solid rgba(255,152,0,.22)">Optional</span>
+        </label>
+        <select class="form-control" id="reportOfficeSetting">
+          <option value="">🏢 All Office Settings</option>
+          <option value="Head Office Delhi">🏛️ Head Office Delhi</option>
+          <option value="Branch Office Gurgaon">🏬 Branch Office Gurgaon</option>
+          <option value="Client Side">🤝 Client Side</option>
+          <option value="Work From Home">🏠 Work From Home</option>
+          <option value="Field">🚗 Field</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:10px 12px;
+      background:rgba(0,200,150,.06);border:1px solid rgba(0,200,150,.18);border-radius:8px">
+      <label class="toggle"><input type="checkbox" id="useRoster">
+        <span class="slider"></span></label>
+      <div>
+        <div style="font-size:12px;font-weight:600;color:var(--accent)">📋 Roster ke Anusaar Generate Karo</div>
+        <div style="font-size:10.5px;color:var(--muted)">ON karo toh WO/L/HD roster shift bhi dikhega</div>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="generateTemplate()" style="width:100%;margin-bottom:14px">
+      ⚡ Generate Template
+    </button>
+
+    <div id="templateBox" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="font-size:11px;color:var(--muted)">WhatsApp Format Preview</span>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-secondary btn-sm" onclick="copyTemplate()">📋 Copy</button>
+          <button class="btn btn-primary btn-sm" onclick="useInCompose()">➡️ Compose</button>
+        </div>
+      </div>
+      <div class="tpl-box" id="templatePreview"></div>
+    </div>
+  </div>
+
+  <!-- Group Manager -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">👥 WhatsApp Groups</span>
+      <button class="btn btn-primary btn-sm" onclick="showAddGroup()">+ Add Group</button>
+    </div>
+    <div id="addGroupForm" style="display:none;margin-bottom:14px;padding:12px;
+      background:rgba(0,200,150,.06);border-radius:10px;border:1px solid rgba(0,200,150,.2)">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <div class="form-group" style="margin:0">
+          <label style="font-size:11px">Group / Contact Name *</label>
+          <input class="form-control" id="newGrpName" placeholder="e.g. All Staff">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label style="font-size:11px">Phone (with country code)</label>
+          <input class="form-control" id="newGrpPhone" placeholder="e.g. 919876543210">
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px">
+        💡 Phone number se direct WhatsApp khulega. Group ke liye blank chhod do.
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary btn-sm" onclick="addGroup()">✅ Save</button>
+        <button class="btn btn-secondary btn-sm" onclick="hideAddGroup()">✖ Cancel</button>
+      </div>
+    </div>
+    <div class="grp-list" id="groupsList">
+      <div style="color:var(--muted);text-align:center;padding:20px;font-size:13px">Loading...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ROW 2: Compose & Send | Scheduler -->
+<div class="wa-bot">
+
+  <!-- Compose & Send -->
+  <div class="card">
+    <div class="card-header"><span class="card-title">💬 Compose & Send</span></div>
+
+    <div class="form-group">
+      <label>Group Select Karo</label>
+      <div id="composeGroupsList" style="display:flex;flex-direction:column;gap:6px;
+        max-height:180px;overflow-y:auto;margin-top:6px">
+        <div style="color:var(--muted);font-size:12px">Groups load ho rahe hain...</div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Message</label>
+      <textarea class="form-control" id="msgText" rows="6"
+        placeholder="Message likho... Variables: {date} {time} {company}"></textarea>
+    </div>
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+      <button class="btn btn-secondary btn-sm" onclick="insertVar('{date}')">📅 Date</button>
+      <button class="btn btn-secondary btn-sm" onclick="insertVar('{time}')">⏰ Time</button>
+      <button class="btn btn-secondary btn-sm" onclick="insertVar('{company}')">🏢 Company</button>
+    </div>
+
+    <button class="btn btn-primary" onclick="sendToWhatsApp()"
+      style="width:100%;font-size:15px;padding:12px;background:#25d366;border-color:#25d366">
+      📲 WhatsApp Mein Bhejo
+    </button>
+    <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:6px">
+      Click karo → WhatsApp Web khulega → Sirf Send press karo ✅
+    </div>
+  </div>
+
+  <!-- Scheduler -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">⏰ Auto Scheduler</span>
+      <button class="btn btn-primary btn-sm" onclick="showAddSchedule()">+ Schedule</button>
+    </div>
+
+    <div id="addSchedForm" style="display:none;margin-bottom:14px;padding:12px;
+      background:rgba(79,70,229,.08);border-radius:10px;border:1px solid rgba(79,70,229,.25)">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <div class="form-group" style="margin:0">
+          <label style="font-size:11px">Group</label>
+          <select class="form-control" id="schedGrpId">
+            <option value="">-- Select --</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0">
+          <label style="font-size:11px">Time</label>
+          <input class="form-control" type="time" id="schedTime" value="09:00">
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:8px">
+        <label style="font-size:11px">Message</label>
+        <textarea class="form-control" id="schedMsg" rows="3"
+          placeholder="e.g. Aaj ki attendance: {date}"></textarea>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <label class="toggle"><input type="checkbox" id="schedRepeat" checked>
+          <span class="slider"></span></label>
+        <span style="font-size:12px;color:var(--text2)">Har roz repeat karo</span>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary btn-sm" onclick="addSchedule()">✅ Save Schedule</button>
+        <button class="btn btn-secondary btn-sm" onclick="hideAddSchedule()">✖ Cancel</button>
+      </div>
+    </div>
+
+    <div id="schedList">
+      <div style="color:var(--muted);text-align:center;padding:20px;font-size:13px">Loading...</div>
+    </div>
+
+    <div style="margin-top:12px;padding:10px 12px;background:rgba(37,211,102,.06);
+      border:1px solid rgba(37,211,102,.2);border-radius:8px;font-size:11px;color:var(--muted)">
+      🤖 <strong style="color:#25d366">Auto:</strong> Har minute check hota hai. Set time par
+      WhatsApp Web automatically khulta hai message ke saath.
+    </div>
+  </div>
+</div>
+
+<!-- History -->
+<div class="card" style="margin-top:18px">
+  <div class="card-header">
+    <span class="card-title">📋 Message History</span>
+    <button class="btn btn-secondary btn-sm" onclick="loadHistory()">🔄 Refresh</button>
+  </div>
+  <div id="historyList">
+    {% for msg in messages %}
+    <div class="msg-card">
+      <div class="msg-meta">
+        <span class="msg-group">📣 {{ msg.group_name or 'Group' }}</span>
+        <span class="msg-time status-{{ msg.status }}">{{ msg.status.upper() }}</span>
+      </div>
+      <div class="msg-text">{{ msg.message }}</div>
+      <div class="msg-by">By {{ msg.sent_by }} · {{ msg.created_at }}</div>
+    </div>
+    {% else %}
+    <p style="color:var(--muted);text-align:center;padding:30px">Koi message nahi abhi tak</p>
+    {% endfor %}
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+let allGroups = [];
+let selectedSendGroupId = null;
+let generatedTemplate = '';
+
+document.addEventListener('DOMContentLoaded', () => {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('reportDate').value = today;
+  loadGroups();
+  loadSchedules();
+  setInterval(checkScheduler, 60000);
+});
+
+// ── Template ──
+async function generateTemplate() {
+  const date = document.getElementById('reportDate').value;
+  if (!date) { showToast('Date select karna zaroori hai ❗', 'error'); return; }
+  const office_setting = document.getElementById('reportOfficeSetting').value;
+  const use_roster = document.getElementById('useRoster').checked;
+  const btn = event.target;
+  btn.innerHTML = '⏳ Generating...'; btn.disabled = true;
+  const res = await fetch('/api/whatsapp/attendance_template', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({date, office_setting: office_setting || null, use_roster})
+  });
+  const data = await res.json();
+  if (!data.success) { showToast('Error!', 'error'); return; }
+  btn.innerHTML = '⚡ Generate Template'; btn.disabled = false;
+  if (!data.success) { showToast('Error generating template', 'error'); return; }
+  generatedTemplate = data.message;
+  document.getElementById('templatePreview').textContent = generatedTemplate;
+  document.getElementById('templateBox').style.display = 'block';
+  showToast('Template ready! ✅');
+}
+
+function copyTemplate() {
+  if (!generatedTemplate) return;
+  navigator.clipboard.writeText(generatedTemplate)
+    .then(() => showToast('Copied! WhatsApp mein paste karo 📋'))
+    .catch(() => {
+      const ta = document.createElement('textarea');
+      ta.value = generatedTemplate;
+      document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
+      showToast('Copied! 📋');
+    });
+}
+
+function useInCompose() {
+  if (!generatedTemplate) return;
+  document.getElementById('msgText').value = generatedTemplate;
+  document.querySelector('.wa-bot').scrollIntoView({behavior:'smooth'});
+  showToast('Compose mein add ho gaya!');
+}
+
+// ── Groups ──
+async function loadGroups() {
+  const res = await fetch('/api/wa/groups');
+  allGroups = await res.json();
+  renderGroupsList();
+  renderComposeGroups();
+  renderSchedGroupSelect();
+}
+
+function renderGroupsList() {
+  const el = document.getElementById('groupsList');
+  if (!allGroups.length) {
+    el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px;font-size:13px">Koi group nahi. "+ Add Group" se add karo.</div>';
+    return;
+  }
+  el.innerHTML = allGroups.map(g => `
+    <div class="grp-row">
+      <div class="grp-avatar">${g.group_type === 'contact' ? '👤' : '👥'}</div>
+      <div>
+        <div class="grp-name">${g.name}</div>
+        <div class="grp-phone">${g.phone ? '📞 +' + g.phone : 'Group (no number)'}</div>
+      </div>
+      <button class="grp-del" onclick="deleteGroup(${g.id}, '${g.name.replace(/'/g,"\\'")}')">🗑️</button>
+    </div>
+  `).join('');
+}
+
+function renderComposeGroups() {
+  const el = document.getElementById('composeGroupsList');
+  if (!allGroups.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:12px">Pehle group add karo.</div>';
+    return;
+  }
+  el.innerHTML = allGroups.map(g => `
+    <div class="grp-row" id="composeGrp_${g.id}" onclick="selectSendGroup(${g.id})">
+      <div class="grp-avatar" style="font-size:14px">${g.group_type === 'contact' ? '👤' : '👥'}</div>
+      <div style="flex:1">
+        <div class="grp-name">${g.name}</div>
+        <div class="grp-phone">${g.phone ? '+' + g.phone : 'WhatsApp Web se dhundega'}</div>
+      </div>
+      <div id="cCheck_${g.id}" style="font-size:18px;opacity:0">✅</div>
+    </div>
+  `).join('');
+}
+
+function selectSendGroup(gid) {
+  if (selectedSendGroupId) {
+    const prev = document.getElementById('composeGrp_' + selectedSendGroupId);
+    const prevC = document.getElementById('cCheck_' + selectedSendGroupId);
+    if (prev) prev.classList.remove('selected');
+    if (prevC) prevC.style.opacity = '0';
+  }
+  selectedSendGroupId = gid;
+  const el = document.getElementById('composeGrp_' + gid);
+  const ch = document.getElementById('cCheck_' + gid);
+  if (el) el.classList.add('selected');
+  if (ch) ch.style.opacity = '1';
+}
+
+function renderSchedGroupSelect() {
+  const sel = document.getElementById('schedGrpId');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">-- Group Select Karo --</option>' +
+    allGroups.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
+}
+
+function showAddGroup() { document.getElementById('addGroupForm').style.display = 'block'; }
+function hideAddGroup() { document.getElementById('addGroupForm').style.display = 'none'; }
+
+async function addGroup() {
+  const name = document.getElementById('newGrpName').value.trim();
+  const phone = document.getElementById('newGrpPhone').value.trim().replace(/\D/g,'');
+  if (!name) { showToast('Naam daalo', 'error'); return; }
+  const res = await fetch('/api/wa/groups/add', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({name, phone, group_type: phone ? 'contact' : 'group'})
+  });
+  const data = await res.json();
+  if (data.success) {
+    showToast('"' + name + '" add ho gaya! ✅');
+    document.getElementById('newGrpName').value = '';
+    document.getElementById('newGrpPhone').value = '';
+    hideAddGroup();
+    await loadGroups();
+  }
+}
+
+async function deleteGroup(id, name) {
+  if (!confirm('"' + name + '" delete karna chahte ho?')) return;
+  await fetch('/api/wa/groups/delete', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({id})
+  });
+  showToast('"' + name + '" delete ho gaya');
+  await loadGroups();
+  if (selectedSendGroupId === id) selectedSendGroupId = null;
+}
+
+// ── Compose & Send ──
+function insertVar(v) {
+  const ta = document.getElementById('msgText');
+  const pos = ta.selectionStart;
+  ta.value = ta.value.slice(0,pos) + v + ta.value.slice(ta.selectionEnd);
+  ta.focus(); ta.setSelectionRange(pos+v.length, pos+v.length);
+}
+
+function processMsg(msg) {
+  const now = new Date();
+  return msg
+    .replace(/{date}/g, now.toLocaleDateString('en-IN'))
+    .replace(/{time}/g, now.toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'}))
+    .replace(/{company}/g, 'EasySource');
+}
+
+async function sendToWhatsApp() {
+  const msg = document.getElementById('msgText').value.trim();
+  if (!msg) { showToast('Message likhna zaroori hai', 'error'); return; }
+  if (!selectedSendGroupId) { showToast('Pehle group select karo', 'error'); return; }
+  const finalMsg = processMsg(msg);
+  const res = await fetch('/api/wa/send_web', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({group_id: selectedSendGroupId, message: finalMsg})
+  });
+  const data = await res.json();
+  if (!data.success) { showToast('Error: ' + data.error, 'error'); return; }
+  window.open(data.wa_link, '_blank');
+  showToast('"' + data.group_name + '" ka WhatsApp khul gaya! Send karo ✅');
+  setTimeout(loadHistory, 1500);
+}
+
+// ── Scheduler ──
+function showAddSchedule() { document.getElementById('addSchedForm').style.display = 'block'; }
+function hideAddSchedule() { document.getElementById('addSchedForm').style.display = 'none'; }
+
+async function addSchedule() {
+  const gid  = document.getElementById('schedGrpId').value;
+  const time = document.getElementById('schedTime').value;
+  const msg  = document.getElementById('schedMsg').value.trim();
+  const rep  = document.getElementById('schedRepeat').checked;
+  if (!gid || !time || !msg) { showToast('Sab fields bharein', 'error'); return; }
+  const res = await fetch('/api/wa/schedules/add', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({group_id: gid, message: msg, schedule_time: time, repeat_daily: rep})
+  });
+  const data = await res.json();
+  if (data.success) {
+    showToast('Schedule save ho gaya! ⏰');
+    document.getElementById('schedMsg').value = '';
+    hideAddSchedule();
+    loadSchedules();
+  }
+}
+
+async function loadSchedules() {
+  const res = await fetch('/api/wa/schedules');
+  const scheds = await res.json();
+  const el = document.getElementById('schedList');
+  if (!scheds.length) {
+    el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px;font-size:13px">Koi schedule nahi. "+ Schedule" se add karo.</div>';
+    return;
+  }
+  el.innerHTML = scheds.map(s => `
+    <div class="sched-row">
+      <div class="sched-info">
+        <div class="sched-grp">👥 ${s.group_name || 'Unknown'}</div>
+        <div class="sched-time">⏰ ${s.schedule_time}
+          ${s.repeat_daily ? '<span class="badge-daily">Daily</span>' : ''}</div>
+        <div class="sched-msg">${s.message.substring(0,55)}${s.message.length>55?'...':''}</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" ${s.active ? 'checked' : ''}
+          onchange="toggleSchedule(${s.id}, this.checked)">
+        <span class="slider"></span>
+      </label>
+      <button class="grp-del" onclick="deleteSchedule(${s.id})">🗑️</button>
+    </div>
+  `).join('');
+}
+
+async function toggleSchedule(id, active) {
+  await fetch('/api/wa/schedules/toggle', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({id, active: active ? 1 : 0})
+  });
+  showToast(active ? 'Active ✅' : 'Paused ⏸');
+}
+
+async function deleteSchedule(id) {
+  if (!confirm('Schedule delete karna chahte ho?')) return;
+  await fetch('/api/wa/schedules/delete', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({id})
+  });
+  showToast('Delete ho gaya');
+  loadSchedules();
+}
+
+async function checkScheduler() {
+  const res = await fetch('/api/wa/check_schedules');
+  const data = await res.json();
+  if (data.due && data.due.length > 0) {
+    for (const item of data.due) {
+      showToast('⏰ Auto: "' + item.group_name + '" ka time ho gaya!', 'info');
+      setTimeout(() => window.open(item.wa_link, '_blank'), 500);
+    }
+    setTimeout(loadHistory, 2000);
+  }
+}
+
+async function loadHistory() { location.reload(); }
+</script>
+{% endblock %}

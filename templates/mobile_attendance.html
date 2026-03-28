@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0e1a">
+<title>Attendance – EasySource</title>
+<link rel="manifest" href="/manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  :root {
+    --bg: #0a0e1a;
+    --card: #111827;
+    --border: #1e2d45;
+    --accent: #00d4aa;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --text: #e2e8f0;
+    --muted: #64748b;
+  }
+  html, body { height: 100%; overflow-x: hidden; }
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* SCREENS */
+  .screen { display: none; min-height: 100vh; flex-direction: column; }
+  .screen.active { display: flex; }
+
+  /* LOGIN SCREEN */
+  #loginScreen {
+    background: linear-gradient(160deg, #0a0e1a 0%, #0f1f35 100%);
+    align-items: center; justify-content: center; padding: 24px;
+    position: relative; overflow: hidden;
+  }
+  .login-blob {
+    position: absolute; border-radius: 50%; filter: blur(60px); opacity: 0.25; pointer-events: none;
+  }
+  .lb1 { width: 280px; height: 280px; background: var(--accent); top: -80px; right: -80px; }
+  .lb2 { width: 200px; height: 200px; background: #4f46e5; bottom: -60px; left: -60px; }
+  .login-box { width: 100%; max-width: 380px; position: relative; z-index: 2; }
+  .login-logo { text-align: center; margin-bottom: 36px; }
+  .login-logo .icon-wrap {
+    width: 72px; height: 72px; margin: 0 auto 14px;
+    background: linear-gradient(135deg, var(--accent), #4f46e5);
+    border-radius: 20px; display: flex; align-items: center; justify-content: center;
+    font-size: 34px; box-shadow: 0 12px 32px rgba(0,212,170,0.35);
+  }
+  .login-logo h1 { font-size: 26px; font-weight: 900; }
+  .login-logo h1 span { color: var(--accent); }
+  .login-logo p { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .inp-wrap { position: relative; margin-bottom: 16px; }
+  .inp-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 16px; }
+  .inp {
+    width: 100%; padding: 16px 16px 16px 46px;
+    background: rgba(255,255,255,0.06); border: 1.5px solid var(--border);
+    border-radius: 14px; color: var(--text); font-family: inherit; font-size: 16px; outline: none;
+    transition: border-color 0.2s;
+  }
+  .inp:focus { border-color: var(--accent); background: rgba(0,212,170,0.05); }
+  .login-btn {
+    width: 100%; padding: 17px; margin-top: 8px;
+    background: linear-gradient(135deg, var(--accent), #00b899);
+    border: none; border-radius: 14px; color: #0a0e1a;
+    font-family: inherit; font-size: 17px; font-weight: 800;
+    cursor: pointer; letter-spacing: 0.02em;
+    box-shadow: 0 8px 24px rgba(0,212,170,0.3);
+    transition: transform 0.1s, box-shadow 0.2s;
+    -webkit-appearance: none;
+  }
+  .login-btn:active { transform: scale(0.97); }
+  .err-msg {
+    background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.35);
+    border-radius: 10px; padding: 12px 16px; color: #f87171; font-size: 14px;
+    margin-bottom: 16px; text-align: center;
+  }
+
+  /* MAIN APP */
+  #appScreen { background: var(--bg); }
+  .app-header {
+    background: var(--card); border-bottom: 1px solid var(--border);
+    padding: 16px 20px; padding-top: calc(16px + env(safe-area-inset-top));
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 50;
+  }
+  .app-logo { font-size: 16px; font-weight: 800; }
+  .app-logo span { color: var(--accent); }
+  .user-chip {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,0.05); border-radius: 20px; padding: 6px 12px;
+  }
+  .user-av {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), #4f46e5);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 800;
+  }
+  .user-nm { font-size: 12px; font-weight: 700; }
+  .logout-link { font-size: 12px; color: var(--muted); cursor: pointer; padding: 4px 8px; }
+
+  .app-content { padding: 20px 16px; flex: 1; }
+
+  /* DATE BAR */
+  .date-bar {
+    background: linear-gradient(135deg, rgba(0,212,170,0.12), rgba(79,70,229,0.12));
+    border: 1px solid rgba(0,212,170,0.25);
+    border-radius: 14px; padding: 14px 18px;
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .date-main { font-size: 18px; font-weight: 800; color: var(--accent); }
+  .date-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .live-dot { width: 8px; height: 8px; background: #22c55e; border-radius: 50%; animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.4)} }
+
+  /* QUICK STATS */
+  .quick-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+  .qs-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px; text-align: center;
+  }
+  .qs-num { font-size: 22px; font-weight: 900; }
+  .qs-lbl { font-size: 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; }
+
+  /* MY ATTENDANCE */
+  .section-title { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
+
+  .my-att-box {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 20px; margin-bottom: 20px;
+  }
+  .my-att-status { text-align: center; padding: 16px 0; }
+  .status-big { font-size: 48px; margin-bottom: 8px; }
+  .status-text { font-size: 20px; font-weight: 800; }
+  .status-time { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+  .att-mark-btns { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 16px; }
+  .mark-btn {
+    padding: 16px 8px; border-radius: 12px; border: 2px solid;
+    font-family: inherit; font-size: 13px; font-weight: 800;
+    cursor: pointer; transition: all 0.15s; text-align: center;
+    -webkit-appearance: none;
+  }
+  .mark-btn:active { transform: scale(0.93); }
+  .mark-btn.P { border-color: rgba(34,197,94,0.5); color: #4ade80; background: rgba(34,197,94,0.08); }
+  .mark-btn.A { border-color: rgba(239,68,68,0.5); color: #f87171; background: rgba(239,68,68,0.08); }
+  .mark-btn.OD { border-color: rgba(245,158,11,0.5); color: #fcd34d; background: rgba(245,158,11,0.08); }
+  .mark-btn.P.sel { background: rgba(34,197,94,0.25); border-color: #4ade80; box-shadow: 0 4px 16px rgba(34,197,94,0.3); }
+  .mark-btn.A.sel { background: rgba(239,68,68,0.25); border-color: #f87171; box-shadow: 0 4px 16px rgba(239,68,68,0.3); }
+  .mark-btn.OD.sel { background: rgba(245,158,11,0.25); border-color: #fcd34d; box-shadow: 0 4px 16px rgba(245,158,11,0.3); }
+  .mark-btn .btn-icon { font-size: 22px; display: block; margin-bottom: 4px; }
+
+  .remark-inp {
+    width: 100%; margin-top: 14px; padding: 12px 16px;
+    background: rgba(255,255,255,0.04); border: 1.5px solid var(--border);
+    border-radius: 10px; color: var(--text); font-family: inherit; font-size: 14px; outline: none;
+  }
+  .remark-inp:focus { border-color: var(--accent); }
+
+  .save-btn {
+    width: 100%; margin-top: 14px; padding: 16px;
+    background: linear-gradient(135deg, var(--accent), #00b899);
+    border: none; border-radius: 12px; color: #0a0e1a;
+    font-family: inherit; font-size: 16px; font-weight: 800;
+    cursor: pointer; transition: transform 0.1s;
+    -webkit-appearance: none;
+  }
+  .save-btn:active { transform: scale(0.96); }
+  .save-btn:disabled { opacity: 0.5; }
+
+  /* HISTORY */
+  .hist-item {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 16px; margin-bottom: 10px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .hist-date { font-size: 14px; font-weight: 700; }
+  .hist-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .hist-badge { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 800; }
+  .hb-P { background: rgba(34,197,94,0.15); color: #4ade80; }
+  .hb-A { background: rgba(239,68,68,0.15); color: #f87171; }
+  .hb-OD { background: rgba(245,158,11,0.15); color: #fcd34d; }
+
+  /* BOTTOM NAV */
+  .bottom-nav {
+    background: var(--card); border-top: 1px solid var(--border);
+    display: flex; position: sticky; bottom: 0;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .bnav-btn {
+    flex: 1; padding: 12px 8px; border: none; background: none;
+    color: var(--muted); font-family: inherit; font-size: 10px; font-weight: 700;
+    cursor: pointer; text-align: center; transition: color 0.15s;
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .bnav-btn .bni { font-size: 20px; display: block; margin-bottom: 3px; }
+  .bnav-btn.active { color: var(--accent); }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
+    background: rgba(17,24,39,0.97); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 24px; font-size: 14px; font-weight: 700;
+    z-index: 999; white-space: nowrap; opacity: 0; transition: opacity 0.3s;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .toast.show { opacity: 1; }
+  .toast.ok { border-color: rgba(34,197,94,0.5); color: #4ade80; }
+  .toast.err { border-color: rgba(239,68,68,0.5); color: #f87171; }
+
+  /* LOADING */
+  .loader { text-align: center; padding: 40px; color: var(--muted); }
+  .spin { display: inline-block; width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* Install banner */
+  .install-banner {
+    background: rgba(0,212,170,0.1); border: 1px solid rgba(0,212,170,0.3);
+    border-radius: 12px; padding: 14px 16px; margin-bottom: 16px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .install-banner p { font-size: 13px; color: var(--text); }
+  .install-banner span { font-size: 11px; color: var(--muted); }
+  .install-btn {
+    background: var(--accent); color: #0a0e1a; border: none;
+    border-radius: 8px; padding: 8px 14px; font-family: inherit;
+    font-size: 12px; font-weight: 800; cursor: pointer;
+    white-space: nowrap; flex-shrink: 0;
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div class="screen active" id="loginScreen">
+  <div class="login-blob lb1"></div>
+  <div class="login-blob lb2"></div>
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="icon-wrap">🏢</div>
+      <h1>Easy<span>Source</span></h1>
+      <p>Employee Attendance Portal</p>
+    </div>
+    <div class="err-msg" id="loginErr" style="display:none"></div>
+    <div class="inp-wrap">
+      <span class="inp-icon">👤</span>
+      <input class="inp" id="loginUser" type="text" placeholder="Username" autocomplete="username" autocapitalize="none">
+    </div>
+    <div class="inp-wrap">
+      <span class="inp-icon">🔒</span>
+      <input class="inp" id="loginPass" type="password" placeholder="Password" autocomplete="current-password">
+    </div>
+    <button class="login-btn" id="loginBtn" onclick="doLogin()">Sign In →</button>
+  </div>
+</div>
+
+<!-- APP SCREEN -->
+<div class="screen" id="appScreen">
+  <div class="app-header">
+    <div class="app-logo">Easy<span>Source</span></div>
+    <div class="user-chip">
+      <div class="user-av" id="headerAv">U</div>
+      <div class="user-nm" id="headerName">User</div>
+      <span class="logout-link" onclick="doLogout()">↩</span>
+    </div>
+  </div>
+
+  <div class="app-content">
+
+    <!-- TAB: HOME / ATTENDANCE -->
+    <div class="tab-content active" id="tabHome">
+
+      <div id="installBanner" class="install-banner" style="display:none">
+        <div>
+          <p>📲 <strong>App Install करें</strong></p>
+          <span>Home screen पर shortcut बनाएं</span>
+        </div>
+        <button class="install-btn" id="installBtn" onclick="installPWA()">Install</button>
+      </div>
+
+      <div class="date-bar">
+        <div>
+          <div class="date-main" id="todayDate">—</div>
+          <div class="date-sub" id="todayDay">Loading...</div>
+        </div>
+        <div class="live-dot" title="Live"></div>
+      </div>
+
+      <div class="quick-stats">
+        <div class="qs-card">
+          <div class="qs-num" id="qsP" style="color:#4ade80">—</div>
+          <div class="qs-lbl">Present</div>
+        </div>
+        <div class="qs-card">
+          <div class="qs-num" id="qsA" style="color:#f87171">—</div>
+          <div class="qs-lbl">Absent</div>
+        </div>
+        <div class="qs-card">
+          <div class="qs-num" id="qsOD" style="color:#fcd34d">—</div>
+          <div class="qs-lbl">OD</div>
+        </div>
+      </div>
+
+      <div class="section-title">आज की Attendance</div>
+      <div class="my-att-box">
+        <div class="my-att-status" id="currentStatus">
+          <div class="status-big">⏳</div>
+          <div class="status-text" style="color:var(--muted)">अभी तक Mark नहीं</div>
+          <div class="status-time">नीचे से mark करें</div>
+        </div>
+
+        <div class="att-mark-btns">
+          <button class="mark-btn P" onclick="selectStatus('P')">
+            <span class="btn-icon">✅</span>Present
+          </button>
+          <button class="mark-btn A" onclick="selectStatus('A')">
+            <span class="btn-icon">❌</span>Absent
+          </button>
+          <button class="mark-btn OD" onclick="selectStatus('OD')">
+            <span class="btn-icon">🚗</span>On Duty
+          </button>
+        </div>
+
+        <input class="remark-inp" id="remarkInp" placeholder="Remark (optional)..." maxlength="100">
+        <button class="save-btn" id="saveBtn" onclick="saveAttendance()" disabled>💾 Attendance Save करें</button>
+      </div>
+    </div>
+
+    <!-- TAB: HISTORY -->
+    <div class="tab-content" id="tabHistory">
+      <div class="section-title">मेरी Attendance History (30 दिन)</div>
+      <div id="historyList"><div class="loader"><div class="spin"></div></div></div>
+    </div>
+
+  </div>
+
+  <div class="bottom-nav">
+    <button class="bnav-btn active" id="bnHome" onclick="switchTab('home')">
+      <span class="bni">🏠</span>Home
+    </button>
+    <button class="bnav-btn" id="bnHistory" onclick="switchTab('history')">
+      <span class="bni">📋</span>History
+    </button>
+    <button class="bnav-btn" id="bnProfile" onclick="switchTab('profile')">
+      <span class="bni">👤</span>Profile
+    </button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const TODAY = new Date().toISOString().slice(0,10);
+  let SESSION = null;
+  let selectedStatus = null;
+  let deferredPrompt = null;
+
+  // PWA Install prompt
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    document.getElementById('installBanner').style.display = 'flex';
+  });
+
+  function installPWA() {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(() => {
+      document.getElementById('installBanner').style.display = 'none';
+      deferredPrompt = null;
+    });
+  }
+
+  // Date display
+  const dateOpts = { weekday:'long', year:'numeric', month:'long', day:'numeric' };
+  const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+  function updateDate() {
+    const now = new Date();
+    document.getElementById('todayDate').textContent = now.toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'});
+    document.getElementById('todayDay').textContent = dayNames[now.getDay()] + ', ' + now.toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'});
+  }
+  setInterval(updateDate, 30000);
+  updateDate();
+
+  // LOGIN
+  async function doLogin() {
+    const username = document.getElementById('loginUser').value.trim();
+    const password = document.getElementById('loginPass').value;
+    if (!username || !password) { showErr('Username और Password दोनों डालें'); return; }
+
+    const btn = document.getElementById('loginBtn');
+    btn.textContent = 'Signing in...'; btn.disabled = true;
+
+    try {
+      const fd = new FormData();
+      fd.append('username', username);
+      fd.append('password', password);
+      const r = await fetch('/login', { method: 'POST', body: fd, redirect: 'manual' });
+
+      if (r.type === 'opaqueredirect' || r.status === 302 || r.url.includes('/dashboard')) {
+        // Check session
+        const me = await fetch('/api/me');
+        if (me.ok) {
+          SESSION = await me.json();
+          showApp();
+        } else {
+          showErr('Login failed. Try again.');
+        }
+      } else {
+        showErr('Username या Password गलत है ❌');
+      }
+    } catch(e) {
+      showErr('Server से connect नहीं हो पाया');
+    }
+    btn.textContent = 'Sign In →'; btn.disabled = false;
+  }
+
+  function showErr(msg) {
+    const el = document.getElementById('loginErr');
+    el.textContent = msg; el.style.display = 'block';
+  }
+
+  function showApp() {
+    document.getElementById('loginScreen').classList.remove('active');
+    document.getElementById('appScreen').classList.add('active');
+    document.getElementById('headerAv').textContent = SESSION.name ? SESSION.name[0].toUpperCase() : 'U';
+    document.getElementById('headerName').textContent = SESSION.name || SESSION.username;
+    loadTodayStats();
+    loadMyAttendance();
+  }
+
+  async function doLogout() {
+    await fetch('/logout');
+    SESSION = null;
+    document.getElementById('appScreen').classList.remove('active');
+    document.getElementById('loginScreen').classList.add('active');
+    document.getElementById('loginPass').value = '';
+  }
+
+  // Check if already logged in
+  window.addEventListener('load', async () => {
+    try {
+      const r = await fetch('/api/me');
+      if (r.ok) {
+        SESSION = await r.json();
+        showApp();
+      }
+    } catch(e) {}
+
+    // Enter key on login
+    document.getElementById('loginPass').addEventListener('keydown', e => {
+      if (e.key === 'Enter') doLogin();
+    });
+    document.getElementById('loginUser').addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('loginPass').focus();
+    });
+  });
+
+  // ATTENDANCE
+  function selectStatus(s) {
+    selectedStatus = s;
+    document.querySelectorAll('.mark-btn').forEach(b => b.classList.remove('sel'));
+    document.querySelector(`.mark-btn.${s}`).classList.add('sel');
+    document.getElementById('saveBtn').disabled = false;
+
+    const icons = {P:'✅', A:'❌', OD:'🚗'};
+    const labels = {P:'Present', A:'Absent', OD:'On Duty'};
+    const colors = {P:'#4ade80', A:'#f87171', OD:'#fcd34d'};
+    document.getElementById('currentStatus').innerHTML = `
+      <div class="status-big">${icons[s]}</div>
+      <div class="status-text" style="color:${colors[s]}">${labels[s]} Selected</div>
+      <div class="status-time">Save करना मत भूलें ↓</div>`;
+  }
+
+  async function saveAttendance() {
+    if (!selectedStatus) return;
+    const btn = document.getElementById('saveBtn');
+    btn.textContent = 'Saving...'; btn.disabled = true;
+
+    const data = {
+      emp_id: SESSION.emp_id || SESSION.username,
+      date: TODAY,
+      status: selectedStatus,
+      remark: document.getElementById('remarkInp').value
+    };
+
+    try {
+      const r = await fetch('/api/attendance/mark', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(data)
+      });
+      const res = await r.json();
+      if (res.success) {
+        showToast('✅ Attendance Save हो गई!', 'ok');
+        loadMyAttendance();
+        loadTodayStats();
+      } else {
+        showToast('❌ Error: ' + (res.error || 'Try again'), 'err');
+      }
+    } catch(e) {
+      showToast('❌ Server error', 'err');
+    }
+    btn.textContent = '💾 Attendance Save करें';
+    btn.disabled = false;
+  }
+
+  async function loadMyAttendance() {
+    try {
+      const records = await (await fetch('/api/attendance/get', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({date: TODAY})
+      })).json();
+
+      const mine = records.find(r => r.emp_id === (SESSION.emp_id || SESSION.username));
+      if (mine) {
+        const icons = {P:'✅', A:'❌', OD:'🚗'};
+        const labels = {P:'Present', A:'Absent', OD:'On Duty'};
+        const colors = {P:'#4ade80', A:'#f87171', OD:'#fcd34d'};
+        document.getElementById('currentStatus').innerHTML = `
+          <div class="status-big">${icons[mine.status]}</div>
+          <div class="status-text" style="color:${colors[mine.status]}">${labels[mine.status]}</div>
+          <div class="status-time">Marked at ${mine.marked_at ? mine.marked_at.slice(11,16) : '—'}</div>`;
+        document.querySelector(`.mark-btn.${mine.status}`)?.classList.add('sel');
+        selectedStatus = mine.status;
+        document.getElementById('saveBtn').textContent = '✏️ Update करें';
+        document.getElementById('saveBtn').disabled = false;
+        if (mine.remark) document.getElementById('remarkInp').value = mine.remark;
+      }
+    } catch(e) {}
+  }
+
+  async function loadTodayStats() {
+    try {
+      const records = await (await fetch('/api/attendance/get', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({date: TODAY})
+      })).json();
+      const c = {P:0, A:0, OD:0};
+      records.forEach(r => c[r.status] = (c[r.status]||0)+1);
+      document.getElementById('qsP').textContent = c.P;
+      document.getElementById('qsA').textContent = c.A;
+      document.getElementById('qsOD').textContent = c.OD;
+    } catch(e) {}
+  }
+
+  async function loadHistory() {
+    const el = document.getElementById('historyList');
+    el.innerHTML = '<div class="loader"><div class="spin"></div></div>';
+    try {
+      // Load last 30 days
+      const promises = [];
+      for (let i = 0; i < 30; i++) {
+        const d = new Date(); d.setDate(d.getDate() - i);
+        promises.push(fetch('/api/attendance/get', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({date: d.toISOString().slice(0,10)})
+        }).then(r=>r.json()).then(records => ({
+          date: d.toISOString().slice(0,10),
+          record: records.find(r => r.emp_id === (SESSION.emp_id || SESSION.username))
+        })));
+      }
+      const results = await Promise.all(promises);
+      const dayLabels = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+      el.innerHTML = results.map(({date, record}) => {
+        const d = new Date(date);
+        const label = record ? {P:'Present ✅', A:'Absent ❌', OD:'On Duty 🚗'}[record.status] : '—';
+        const cls = record ? 'hb-'+record.status : '';
+        return `<div class="hist-item">
+          <div>
+            <div class="hist-date">${d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'})}</div>
+            <div class="hist-sub">${dayLabels[d.getDay()]}</div>
+          </div>
+          ${record ? `<div class="hist-badge ${cls}">${label}</div>` : '<div style="color:var(--muted);font-size:13px">Not marked</div>'}
+        </div>`;
+      }).join('');
+    } catch(e) {
+      el.innerHTML = '<div class="loader">Error loading history</div>';
+    }
+  }
+
+  // TABS
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.bnav-btn').forEach(b => b.classList.remove('active'));
+
+    if (tab === 'home') {
+      document.getElementById('tabHome').classList.add('active');
+      document.getElementById('bnHome').classList.add('active');
+    } else if (tab === 'history') {
+      document.getElementById('tabHistory').classList.add('active');
+      document.getElementById('bnHistory').classList.add('active');
+      loadHistory();
+    } else if (tab === 'profile') {
+      document.getElementById('tabHistory').classList.add('active'); // reuse for profile
+      document.getElementById('bnProfile').classList.add('active');
+      document.getElementById('historyList').innerHTML = `
+        <div style="padding:20px;text-align:center">
+          <div style="font-size:64px;margin-bottom:16px">👤</div>
+          <div style="font-size:22px;font-weight:800">${SESSION?.name || '—'}</div>
+          <div style="font-size:13px;color:var(--muted);margin-top:4px">@${SESSION?.username}</div>
+          <div style="margin-top:16px;padding:14px;background:rgba(255,255,255,0.04);border-radius:12px;font-size:14px">
+            Role: <strong style="color:var(--accent)">${SESSION?.role?.toUpperCase()}</strong>
+          </div>
+        </div>`;
+    }
+  }
+
+  // TOAST
+  let toastTimer;
+  function showToast(msg, type='ok') {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.className = `toast show ${type}`;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+  }
+</script>
+</body>
+</html>

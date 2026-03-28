@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+{% block title %}Reports – HRMS{% endblock %}
+{% block page_title %}Reports{% endblock %}
+{% block breadcrumb %}Analytics & Exports{% endblock %}
+
+{% block extra_style %}
+.rep-filters{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:18px;padding:16px;background:rgba(255,255,255,.025);border:1px solid var(--border);border-radius:12px}
+.fg{display:flex;flex-direction:column;gap:5px}
+.fg label{font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:600}
+.summary-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:18px}
+.sum-box{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center}
+.sum-val{font-size:24px;font-weight:800;font-family:'JetBrains Mono',monospace;line-height:1}
+.sum-lbl{font-size:10px;color:var(--muted);margin-top:4px}
+/* Pivot table */
+.pivot-wrap{overflow:auto;max-height:70vh;border-radius:10px;border:1px solid var(--border)}
+.pivot-table{border-collapse:collapse;min-width:600px}
+.pivot-table th{background:rgba(0,0,0,.4);position:sticky;top:0;z-index:5;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);padding:10px 12px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--border)}
+.pivot-table th.date-col{text-align:center;min-width:52px;cursor:pointer}
+.pivot-table th:first-child,.pivot-table th:nth-child(2){position:sticky;left:0;z-index:10;background:rgba(5,8,20,.95)}
+.pivot-table th:nth-child(2){left:100px}
+.pivot-table td{padding:9px 12px;font-size:12.5px;border-bottom:1px solid rgba(255,255,255,.03);vertical-align:middle;white-space:nowrap}
+.pivot-table td:first-child,.pivot-table td:nth-child(2){position:sticky;left:0;z-index:4;background:rgba(10,13,22,.92)}
+.pivot-table td:nth-child(2){left:100px;background:rgba(12,16,26,.92)}
+.pivot-table tbody tr:hover td{background:rgba(255,255,255,.03)!important}
+.st-chip{display:inline-block;width:34px;text-align:center;padding:3px 5px;border-radius:5px;font-size:11px;font-weight:700}
+.st-P  {background:rgba(76,175,80,.2); color:#69db7c}
+.st-A  {background:rgba(244,67,54,.2); color:#ff6b6b}
+.st-OD {background:rgba(255,152,0,.2); color:#ffb74d}
+.st-L  {background:rgba(124,58,237,.2);color:#c4b5fd}
+.st-WFH{background:rgba(165,180,252,.2);color:#a5b4fc}
+.st-WO {background:rgba(74,85,104,.15);color:var(--muted)}
+.st-empty{color:var(--muted);font-size:10px}
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">📊 Attendance Report</span>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-success btn-sm" onclick="exportCSV()"><i class="fas fa-file-csv"></i> Export CSV</button>
+      <button class="btn btn-info btn-sm"    onclick="exportExcel()"><i class="fas fa-file-excel"></i> Export Excel</button>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="rep-filters">
+    <div class="fg">
+      <label>From Date</label>
+      <input type="date" class="form-control" id="fromDate" style="width:148px">
+    </div>
+    <div class="fg">
+      <label>To Date</label>
+      <input type="date" class="form-control" id="toDate" style="width:148px">
+    </div>
+    <div class="fg">
+      <label>Department</label>
+      <input type="text" class="form-control" id="deptFilter" placeholder="All" style="width:150px">
+    </div>
+    <div class="fg">
+      <label>Office Setting</label>
+      <select class="form-control" id="officeFilter" style="width:190px">
+        <option value="">All Settings</option>
+        <option>Head Office Delhi</option>
+        <option>Branch Office Gurgaon</option>
+        <option>Client Side</option>
+        <option>Work From Home</option>
+        <option>Field</option>
+      </select>
+    </div>
+    <div class="fg">
+      <label>Employee</label>
+      <input type="text" class="form-control" id="empFilter" placeholder="ID or Name" style="width:140px">
+    </div>
+    <div class="fg">
+      <label>View Mode</label>
+      <select class="form-control" id="viewMode" style="width:120px">
+        <option value="pivot">Pivot Table</option>
+        <option value="list">List View</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" onclick="generateReport()" id="genBtn" style="align-self:flex-end">
+      <i class="fas fa-search"></i> Generate
+    </button>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary-grid" id="summaryGrid" style="display:none">
+    <div class="sum-box"><div class="sum-val" id="sumTotal" style="color:var(--accent)">0</div><div class="sum-lbl">Employees</div></div>
+    <div class="sum-box"><div class="sum-val" id="sumP" style="color:#69db7c">0</div><div class="sum-lbl">Present</div></div>
+    <div class="sum-box"><div class="sum-val" id="sumA" style="color:#ff6b6b">0</div><div class="sum-lbl">Absent</div></div>
+    <div class="sum-box"><div class="sum-val" id="sumOD" style="color:#ffb74d">0</div><div class="sum-lbl">OD</div></div>
+    <div class="sum-box"><div class="sum-val" id="sumL" style="color:#c4b5fd">0</div><div class="sum-lbl">Leave</div></div>
+    <div class="sum-box"><div class="sum-val" id="sumPct" style="color:#7aa2f7">0%</div><div class="sum-lbl">Attendance %</div></div>
+  </div>
+
+  <!-- Table -->
+  <div id="reportTableWrap">
+    <div style="text-align:center;color:var(--muted);padding:48px;font-size:13px">
+      📅 Date range select karo aur Generate dabao
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+// Default: current month
+const today = new Date().toISOString().slice(0,10);
+const y = today.slice(0,4), mo = today.slice(5,7);
+document.getElementById('fromDate').value = `${y}-${mo}-01`;
+document.getElementById('toDate').value   = today;
+
+let reportData = [];
+let pivotDates = [];
+let pivotEmps  = [];
+
+async function generateReport() {
+  const from   = document.getElementById('fromDate').value;
+  const to     = document.getElementById('toDate').value;
+  const dept   = document.getElementById('deptFilter').value.trim();
+  const office = document.getElementById('officeFilter').value;
+  const empQ   = document.getElementById('empFilter').value.trim();
+  if(!from || !to){ showToast('Date range select karo', 'error'); return; }
+
+  const btn = document.getElementById('genBtn');
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+  btn.disabled = true;
+
+  try {
+    reportData = await api('/api/reports/attendance', {
+      from_date: from, to_date: to,
+      department: dept || null,
+      office_setting: office || null,
+      emp_query: empQ || null
+    });
+  } catch(e){ showToast('Error', 'error'); }
+
+  btn.innerHTML = '<i class="fas fa-search"></i> Generate';
+  btn.disabled = false;
+
+  if(!reportData.length){
+    document.getElementById('reportTableWrap').innerHTML = '<div style="text-align:center;color:var(--muted);padding:48px">Koi records nahi mile</div>';
+    document.getElementById('summaryGrid').style.display = 'none';
+    return;
+  }
+
+  // Summary
+  const counts = {P:0,A:0,OD:0,L:0,WFH:0};
+  const empSet = new Set();
+  reportData.forEach(r => { if(r.status) counts[r.status]=(counts[r.status]||0)+1; empSet.add(r.emp_id); });
+  const totalRecs = reportData.filter(r=>r.status).length;
+  const pct = totalRecs ? Math.round(counts.P/totalRecs*100) : 0;
+  document.getElementById('summaryGrid').style.display = 'grid';
+  document.getElementById('sumTotal').textContent = empSet.size;
+  document.getElementById('sumP').textContent  = counts.P;
+  document.getElementById('sumA').textContent  = counts.A;
+  document.getElementById('sumOD').textContent = counts.OD;
+  document.getElementById('sumL').textContent  = counts.L||0;
+  document.getElementById('sumPct').textContent = pct+'%';
+
+  const mode = document.getElementById('viewMode').value;
+  if(mode === 'pivot') renderPivot();
+  else renderList();
+}
+
+// ── PIVOT TABLE (emp rows × date columns) ──
+function renderPivot() {
+  // Build date list & emp list
+  const dateSet = new Set();
+  const empMap  = {};  // empId → {code, name, dept, data:{date→status}}
+  reportData.forEach(r => {
+    if(r.date) dateSet.add(r.date);
+    if(!empMap[r.emp_id]) empMap[r.emp_id] = {code: r.emp_id, name: r.name, dept: r.department||'', data:{}};
+    if(r.date && r.status) empMap[r.emp_id].data[r.date] = r.status;
+  });
+  pivotDates = [...dateSet].sort();
+  pivotEmps  = Object.values(empMap).sort((a,b)=>a.name.localeCompare(b.name));
+
+  // Headers
+  let html = `<div class="pivot-wrap"><table class="pivot-table"><thead><tr>
+    <th style="min-width:100px">Emp Code</th>
+    <th style="min-width:160px">Emp Name</th>`;
+  pivotDates.forEach(d => {
+    const dt = new Date(d);
+    const day = dt.toLocaleDateString('en-IN',{day:'2-digit',month:'short'});
+    const wd  = dt.toLocaleDateString('en-IN',{weekday:'short'});
+    html += `<th class="date-col"><div>${day}</div><div style="color:rgba(255,255,255,.35);font-size:9px">${wd}</div></th>`;
+  });
+  html += `<th style="text-align:center;min-width:50px">P</th>
+           <th style="text-align:center;min-width:50px">A</th>
+           <th style="text-align:center;min-width:50px">%</th>
+           </tr></thead><tbody>`;
+
+  // Rows
+  pivotEmps.forEach(emp => {
+    let pc=0, ac=0;
+    html += `<tr><td style="font-family:'JetBrains Mono',monospace;font-size:11px">${emp.code}</td>
+      <td><div style="font-weight:600;font-size:13px">${emp.name}</div>
+      <div style="font-size:10px;color:var(--muted)">${emp.dept}</div></td>`;
+    pivotDates.forEach(d => {
+      const st = emp.data[d];
+      if(st==='P') pc++; if(st==='A') ac++;
+      html += `<td style="text-align:center">${st
+        ? `<span class="st-chip st-${st}">${st}</span>`
+        : `<span class="st-empty">—</span>`}</td>`;
+    });
+    const tot = pc+ac;
+    const pct = tot ? Math.round(pc/tot*100) : 0;
+    html += `<td style="text-align:center;font-weight:700;color:#69db7c;font-family:'JetBrains Mono',monospace">${pc}</td>
+      <td style="text-align:center;font-weight:700;color:#ff6b6b;font-family:'JetBrains Mono',monospace">${ac}</td>
+      <td style="text-align:center;font-weight:700;color:#7aa2f7;font-family:'JetBrains Mono',monospace">${pct}%</td></tr>`;
+  });
+
+  html += '</tbody></table></div>';
+  document.getElementById('reportTableWrap').innerHTML = html;
+}
+
+// ── LIST VIEW ──
+function renderList() {
+  const stLbl = {P:'Present', A:'Absent', OD:'On Duty', L:'Leave', WFH:'WFH'};
+  const stCls = {P:'present', A:'absent', OD:'od', L:'leave', WFH:'wo'};
+  let html = `<div class="pivot-wrap"><table class="pivot-table">
+    <thead><tr><th>Emp Code</th><th>Emp Name</th><th>Department</th><th>Date</th><th>Status</th><th>Remark</th></tr></thead>
+    <tbody>`;
+  reportData.forEach(r => {
+    html += `<tr>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:11px">${r.emp_id||'—'}</td>
+      <td style="font-weight:600">${r.name||'—'}</td>
+      <td style="color:var(--muted)">${r.department||'—'}</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:12px">${r.date||'—'}</td>
+      <td>${r.status ? `<span class="badge badge-${stCls[r.status]||'wo'}">${stLbl[r.status]||r.status}</span>` : '—'}</td>
+      <td style="color:var(--muted)">${r.remark||'—'}</td></tr>`;
+  });
+  html += '</tbody></table></div>';
+  document.getElementById('reportTableWrap').innerHTML = html;
+}
+
+// ── EXPORT CSV (server-side safe) ──
+function exportCSV() {
+  if(!reportData.length){ showToast('Pehle report generate karo', 'error'); return; }
+  const from = document.getElementById('fromDate').value;
+  const to   = document.getElementById('toDate').value;
+
+  const mode = document.getElementById('viewMode').value;
+  let rows;
+  if(mode === 'pivot') {
+    // Pivot CSV: emp code, emp name, then one column per date
+    rows = [['Emp Code','Emp Name','Department',...pivotDates,'Total P','Total A','%']];
+    pivotEmps.forEach(emp => {
+      let pc=0, ac=0;
+      const dateCols = pivotDates.map(d=>{ const s=emp.data[d]||''; if(s==='P')pc++; if(s==='A')ac++; return s; });
+      const tot=pc+ac, pct=tot?Math.round(pc/tot*100):0;
+      rows.push([emp.code, emp.name, emp.dept, ...dateCols, pc, ac, pct+'%']);
+    });
+  } else {
+    rows = [['Emp Code','Emp Name','Department','Date','Status','Remark'],
+      ...reportData.map(r=>[r.emp_id||'',r.name||'',r.department||'',r.date||'',r.status||'',r.remark||''])];
+  }
+
+  const csv = rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\r\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `Attendance_${from}_to_${to}.csv`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  showToast('✅ CSV export ho gaya!');
+}
+
+// ── EXPORT EXCEL ──
+function exportExcel() {
+  if(!reportData.length){ showToast('Pehle report generate karo', 'error'); return; }
+  if(typeof XLSX === 'undefined'){ showToast('Excel library load ho rahi hai, 2 sec baad try karo', 'info'); return; }
+
+  const from = document.getElementById('fromDate').value;
+  const to   = document.getElementById('toDate').value;
+  const mode = document.getElementById('viewMode').value;
+  let data;
+
+  if(mode === 'pivot') {
+    data = [['Emp Code','Emp Name','Department',...pivotDates,'Total P','Total A','%']];
+    pivotEmps.forEach(emp => {
+      let pc=0, ac=0;
+      const dateCols = pivotDates.map(d=>{const s=emp.data[d]||'';if(s==='P')pc++;if(s==='A')ac++;return s;});
+      const tot=pc+ac, pct=tot?Math.round(pc/tot*100):0;
+      data.push([emp.code, emp.name, emp.dept, ...dateCols, pc, ac, pct+'%']);
+    });
+  } else {
+    data = [['Emp Code','Emp Name','Department','Date','Status','Remark'],
+      ...reportData.map(r=>[r.emp_id||'',r.name||'',r.department||'',r.date||'',r.status||'',r.remark||''])];
+  }
+
+  try {
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    // Column widths
+    const wscols = data[0].map((h,i) => ({wch: i<3 ? [12,28,20][i] : (i>=data[0].length-3 ? 8 : 7)}));
+    ws['!cols'] = wscols;
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Attendance');
+    XLSX.writeFile(wb, `Attendance_${from}_to_${to}.xlsx`);
+    showToast('✅ Excel export ho gaya!');
+  } catch(e) {
+    showToast('Excel error: ' + e.message + ' — CSV try karo', 'error');
+  }
+}
+</script>
+{% endblock %}

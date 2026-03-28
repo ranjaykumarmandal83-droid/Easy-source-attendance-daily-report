@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+{% block title %}My Attendance – HRMS{% endblock %}
+{% block page_title %}My Attendance{% endblock %}
+{% block breadcrumb %}Self Service{% endblock %}
+
+{% block extra_style %}
+.status-btn { padding:14px 10px; border-radius:12px; border:2px solid var(--border); background:rgba(255,255,255,.03); cursor:pointer; text-align:center; transition:all .18s; font-size:12px; font-weight:600; color:var(--muted); }
+.status-btn:hover { transform:translateY(-2px); }
+.status-btn.active { border-color:currentColor; background:rgba(255,255,255,.08); color:var(--text); }
+.status-P   { color:#4ade80; } .status-P.active { background:rgba(74,222,128,.1); border-color:#4ade80; }
+.status-L   { color:#f87171; } .status-L.active { background:rgba(248,113,113,.1); border-color:#f87171; }
+.status-WFH { color:#a5b4fc; } .status-WFH.active { background:rgba(165,180,252,.1); border-color:#a5b4fc; }
+.status-OD  { color:#ffb74d; } .status-OD.active { background:rgba(255,183,77,.1); border-color:#ffb74d; }
+.status-HD  { color:#fb923c; } .status-HD.active { background:rgba(251,146,60,.1); border-color:#fb923c; }
+.status-WO  { color:#94a3b8; } .status-WO.active { background:rgba(148,163,184,.1); border-color:#94a3b8; }
+.att-row { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--border); font-size:13px; }
+.att-row:last-child { border-bottom:none; }
+.att-status-badge { font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px; min-width:46px; text-align:center; }
+.emp-hero { background:linear-gradient(135deg,rgba(0,200,150,.12),rgba(61,90,254,.1)); border:1px solid rgba(0,200,150,.2); border-radius:16px; padding:20px; margin-bottom:18px; }
+{% endblock %}
+
+{% block content %}
+<div style="max-width:600px;margin:0 auto">
+
+  {% if not emp_id %}
+  <div class="card" style="text-align:center;padding:40px">
+    <div style="font-size:40px;margin-bottom:12px">⚠️</div>
+    <div style="font-size:16px;font-weight:600;margin-bottom:8px">Employee ID linked nahi hai</div>
+    <div style="color:var(--muted);font-size:13px">Admin se apna Employee ID link karwao Settings mein.</div>
+  </div>
+  {% else %}
+
+  <!-- Employee Card -->
+  {% if emp %}
+  <div class="emp-hero">
+    <div style="display:flex;align-items:center;gap:14px">
+      <div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#0a0e1a;flex-shrink:0">
+        {{ emp.name[0].upper() }}
+      </div>
+      <div>
+        <div style="font-size:17px;font-weight:700">{{ emp.name }}</div>
+        <div style="font-size:12px;color:var(--muted)">{{ emp.emp_id }} · {{ emp.designation or '' }} · {{ emp.department or '' }}</div>
+        <div style="font-size:11.5px;color:var(--accent);margin-top:2px">📍 {{ emp.location or '—' }} &nbsp;🏢 {{ emp.office_setting or '—' }}</div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- TODAY MARK CARD -->
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-header">
+      <span class="card-title">📅 Aaj ki Attendance</span>
+      <span style="font-size:12px;color:var(--muted)" id="todayDateLabel"></span>
+    </div>
+
+    <div id="alreadyMarked" style="display:none;padding:10px 14px;border-radius:10px;margin-bottom:14px;font-size:13px;font-weight:600"></div>
+
+    <!-- Status Grid -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px">
+      <div class="status-btn status-P" id="btn_P" onclick="selectStatus('P')">
+        <div style="font-size:22px;margin-bottom:4px">✅</div>Present
+      </div>
+      <div class="status-btn status-WFH" id="btn_WFH" onclick="selectStatus('WFH')">
+        <div style="font-size:22px;margin-bottom:4px">🏠</div>WFH
+      </div>
+      <div class="status-btn status-OD" id="btn_OD" onclick="selectStatus('OD')">
+        <div style="font-size:22px;margin-bottom:4px">🚗</div>OD
+      </div>
+      <div class="status-btn status-HD" id="btn_HD" onclick="selectStatus('HD')">
+        <div style="font-size:22px;margin-bottom:4px">🌓</div>Half Day
+      </div>
+      <div class="status-btn status-L" id="btn_L" onclick="selectStatus('L')">
+        <div style="font-size:22px;margin-bottom:4px">🏖️</div>Leave
+      </div>
+      <div class="status-btn status-WO" id="btn_WO" onclick="selectStatus('WO')">
+        <div style="font-size:22px;margin-bottom:4px">📴</div>Week Off
+      </div>
+    </div>
+
+    <!-- Remark -->
+    <div class="form-group">
+      <label style="font-size:12px">📝 Remark (optional)</label>
+      <input class="form-control" id="remarkInput" placeholder="e.g. Client visit, Medical leave, Work from Noida...">
+    </div>
+
+    <button class="btn btn-primary" style="width:100%;padding:14px;font-size:15px" id="markBtn" onclick="markAttendance()">
+      ✅ Attendance Mark Karo
+    </button>
+  </div>
+
+  <!-- ATTENDANCE HISTORY -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">📊 My Attendance History</span>
+      <span id="monthSummary" style="font-size:11.5px;color:var(--muted)"></span>
+    </div>
+    <div id="attList">
+      {% if records %}
+        {% for r in records %}
+        <div class="att-row">
+          <div style="min-width:90px;font-size:12.5px;color:var(--muted)">
+            {{ r.date }}
+          </div>
+          <span class="att-status-badge
+            {% if r.status == 'P' %}style="background:rgba(74,222,128,.12);color:#4ade80"
+            {% elif r.status == 'WFH' %}style="background:rgba(165,180,252,.12);color:#a5b4fc"
+            {% elif r.status == 'OD' %}style="background:rgba(255,183,77,.12);color:#ffb74d"
+            {% elif r.status in ['L','A'] %}style="background:rgba(248,113,113,.12);color:#f87171"
+            {% elif r.status == 'HD' %}style="background:rgba(251,146,60,.12);color:#fb923c"
+            {% else %}style="background:rgba(148,163,184,.12);color:#94a3b8"{% endif %}">
+            {{ r.status }}
+          </span>
+          <div style="flex:1;color:var(--muted);font-size:12px">{{ r.remark or '' }}</div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div style="text-align:center;padding:30px;color:var(--muted);font-size:13px">Koi record nahi mila</div>
+      {% endif %}
+    </div>
+  </div>
+
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const TODAY    = '{{ today }}';
+const EMP_ID   = '{{ emp_id }}';
+let selectedStatus = 'P';
+
+// Show today date
+document.getElementById('todayDateLabel').textContent =
+  new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+// Check if already marked today
+const todayRecord = {{ records | tojson }}.find(r => r.date === TODAY);
+if (todayRecord) {
+  showAlreadyMarked(todayRecord.status, todayRecord.remark);
+  selectStatus(todayRecord.status);
+}
+
+// Month summary
+const records = {{ records | tojson }};
+const thisMonth = TODAY.slice(0,7);
+const monthRecs = records.filter(r => r.date.startsWith(thisMonth));
+const counts = {};
+monthRecs.forEach(r => counts[r.status] = (counts[r.status]||0)+1);
+const parts = Object.entries(counts).map(([s,c]) => `${s}:${c}`);
+if (parts.length) document.getElementById('monthSummary').textContent = 'This month: ' + parts.join(' | ');
+
+function showAlreadyMarked(status, remark) {
+  const el = document.getElementById('alreadyMarked');
+  const colors = { P:'rgba(74,222,128,.12)', WFH:'rgba(165,180,252,.12)', OD:'rgba(255,183,77,.12)',
+                   L:'rgba(248,113,113,.12)', HD:'rgba(251,146,60,.12)', WO:'rgba(148,163,184,.12)' };
+  el.style.background = colors[status] || 'rgba(0,200,150,.1)';
+  el.style.color = 'var(--text)';
+  el.innerHTML = `✅ Aaj ki attendance already mark hai: <b>${status}</b>${remark?' — '+remark:''}`;
+  el.style.display = 'block';
+  document.getElementById('markBtn').textContent = '🔄 Update Karo';
+}
+
+function selectStatus(s) {
+  selectedStatus = s;
+  document.querySelectorAll('.status-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('btn_' + s);
+  if (btn) btn.classList.add('active');
+}
+
+async function markAttendance() {
+  if (!selectedStatus) { showToast('Pehle status select karo', 'error'); return; }
+  const btn    = document.getElementById('markBtn');
+  const remark = document.getElementById('remarkInput').value.trim();
+  btn.disabled = true; btn.textContent = '⏳ Saving...';
+  const res = await api('/api/my/mark', { status: selectedStatus, remark });
+  if (res.success) {
+    showToast('✅ Attendance marked: ' + selectedStatus);
+    showAlreadyMarked(selectedStatus, remark);
+    // Update list
+    const existing = document.querySelector('#attList .att-row');
+    if (!existing || !existing.querySelector('div').textContent.includes(TODAY)) {
+      location.reload();
+    }
+  } else {
+    showToast(res.error || 'Error', 'error');
+  }
+  btn.disabled = false;
+  btn.textContent = '🔄 Update Karo';
+}
+
+// Pre-select P by default
+selectStatus('P');
+</script>
+{% endblock %}

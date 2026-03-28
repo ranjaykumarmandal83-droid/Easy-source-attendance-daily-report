@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}EasySource HRMS{% endblock %}</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0d14;--surface:#0d1120;--card:#111826;--card2:#131d2c;
+  --border:rgba(255,255,255,.06);--border2:rgba(255,255,255,.11);
+  --accent:#00c896;--accent2:#3d5afe;--purple:#7c3aed;
+  --danger:#f44336;--warning:#ff9800;--success:#4caf50;
+  --text:#e2e8f5;--text2:#94a3b8;--muted:#4a5568;
+  --sidebar-w:210px;--radius:12px;--radius-lg:16px;
+}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:
+  radial-gradient(ellipse 800px 500px at 10% 0%,rgba(0,200,150,.04),transparent 60%),
+  radial-gradient(ellipse 600px 600px at 90% 100%,rgba(61,90,254,.05),transparent 60%);
+  pointer-events:none;z-index:0}
+.sidebar{width:var(--sidebar-w);background:rgba(10,13,20,.98);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;transition:transform .3s}
+.sb-logo{padding:0;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:center;background:#000;min-height:72px;position:relative}
+.sb-logo::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:.4}
+nav{flex:1;padding:12px 8px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.nav-section{margin-bottom:2px}
+.nav-label{font-size:9px;text-transform:uppercase;letter-spacing:.15em;color:var(--muted);padding:10px 12px 4px;font-weight:700}
+.nav-link{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;color:var(--text2);text-decoration:none;font-size:13px;font-weight:500;transition:all .15s;margin-bottom:1px;position:relative;border:1px solid transparent}
+.nav-link i{width:16px;text-align:center;font-size:12.5px}
+.nav-link:hover{background:rgba(255,255,255,.05);color:var(--text);border-color:var(--border)}
+.nav-link.active{background:linear-gradient(135deg,rgba(0,200,150,.14),rgba(61,90,254,.08));color:var(--accent);border-color:rgba(0,200,150,.22);font-weight:600}
+.nav-link.active::before{content:'';position:absolute;left:-1px;top:4px;bottom:4px;width:3px;background:var(--accent);border-radius:0 3px 3px 0}
+.nav-link .badge{margin-left:auto;background:rgba(0,200,150,.18);color:var(--accent);border:1px solid rgba(0,200,150,.28);font-size:9.5px;padding:1px 6px;border-radius:20px;font-weight:700;font-family:'JetBrains Mono',monospace}
+.sb-user{padding:12px 14px;border-top:1px solid var(--border);display:flex;align-items:center;gap:9px;background:rgba(0,0,0,.25)}
+.u-av{width:34px;height:34px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#060912;flex-shrink:0;box-shadow:0 3px 10px rgba(0,200,150,.28)}
+.u-info{flex:1;min-width:0}
+.u-name{font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.u-role{font-size:9px;padding:1px 6px;border-radius:4px;display:inline-block;margin-top:2px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.role-admin{background:rgba(244,67,54,.14);color:#ff6b6b;border:1px solid rgba(244,67,54,.22)}
+.role-subadmin{background:rgba(255,152,0,.14);color:#ffb74d;border:1px solid rgba(255,152,0,.22)}
+.role-user{background:rgba(0,200,150,.14);color:var(--accent);border:1px solid rgba(0,200,150,.22)}
+.role-viewer{background:rgba(74,85,104,.18);color:var(--text2);border:1px solid rgba(74,85,104,.28)}
+.role-head{background:rgba(245,158,11,.15);color:#f59e0b;border:1px solid rgba(245,158,11,.28)}
+.logout-btn{color:var(--muted);text-decoration:none;padding:6px;border-radius:7px;transition:all .2s;border:1px solid transparent;flex-shrink:0}
+.logout-btn:hover{color:var(--danger);background:rgba(244,67,54,.1);border-color:rgba(244,67,54,.2)}
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh;position:relative;z-index:1}
+.topbar{background:rgba(8,11,20,.9);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.topbar h1{font-size:17px;font-weight:700;letter-spacing:-.02em}
+.topbar .bc{font-size:11px;color:var(--muted);margin-top:1px;font-weight:500}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.clock-chip{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2);background:rgba(255,255,255,.04);padding:5px 11px;border-radius:7px;border:1px solid var(--border)}
+.content{padding:24px;flex:1}
+.card{background:rgba(17,24,38,.8);backdrop-filter:blur(8px);border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px;transition:border-color .2s}
+.card:hover{border-color:var(--border2)}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.card-title{font-size:14.5px;font-weight:600}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;border:none;transition:all .15s;text-decoration:none;letter-spacing:.01em}
+.btn-primary{background:linear-gradient(135deg,var(--accent),#00a87a);color:#060912;box-shadow:0 3px 12px rgba(0,200,150,.22)}
+.btn-primary:hover{box-shadow:0 5px 18px rgba(0,200,150,.38);transform:translateY(-1px)}
+.btn-secondary{background:rgba(255,255,255,.06);color:var(--text);border:1px solid var(--border2)}
+.btn-secondary:hover{background:rgba(255,255,255,.10)}
+.btn-danger{background:rgba(244,67,54,.11);color:#ff6b6b;border:1px solid rgba(244,67,54,.22)}
+.btn-danger:hover{background:rgba(244,67,54,.2)}
+.btn-success{background:rgba(76,175,80,.11);color:#69db7c;border:1px solid rgba(76,175,80,.22)}
+.btn-warning{background:rgba(255,152,0,.11);color:#ffb74d;border:1px solid rgba(255,152,0,.22)}
+.btn-info{background:rgba(30,136,229,.11);color:#64b5f6;border:1px solid rgba(30,136,229,.22)}
+.btn-sm{padding:5px 11px;font-size:11.5px}
+.btn-lg{padding:11px 22px;font-size:14px}
+.table-wrap{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse}
+thead{background:rgba(0,0,0,.28)}
+th{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);padding:11px 14px;text-align:left;font-weight:700;white-space:nowrap}
+td{padding:12px 14px;font-size:13px;border-bottom:1px solid rgba(255,255,255,.035);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tbody tr{transition:background .12s}
+tbody tr:hover td{background:rgba(255,255,255,.022)}
+.badge{display:inline-block;padding:3px 9px;border-radius:6px;font-size:10.5px;font-weight:700;letter-spacing:.04em}
+.badge-present{background:rgba(76,175,80,.14);color:#69db7c;border:1px solid rgba(76,175,80,.22)}
+.badge-absent{background:rgba(244,67,54,.14);color:#ff6b6b;border:1px solid rgba(244,67,54,.22)}
+.badge-od{background:rgba(255,152,0,.14);color:#ffb74d;border:1px solid rgba(255,152,0,.22)}
+.badge-leave{background:rgba(124,58,237,.14);color:#c4b5fd;border:1px solid rgba(124,58,237,.22)}
+.badge-wo{background:rgba(74,85,104,.14);color:var(--muted);border:1px solid rgba(74,85,104,.22)}
+.badge-active{background:rgba(0,200,150,.11);color:var(--accent);border:1px solid rgba(0,200,150,.22)}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:200;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--card2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:26px;width:520px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.5);animation:mIn .22s cubic-bezier(.4,0,.2,1)}
+@keyframes mIn{from{opacity:0;transform:scale(.96) translateY(8px)}to{opacity:1;transform:none}}
+.modal h3{font-size:17px;margin-bottom:18px;font-weight:700}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;font-weight:600}
+.form-control{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border2);border-radius:8px;padding:9px 13px;color:var(--text);font-family:inherit;font-size:13.5px;outline:none;transition:border-color .2s,box-shadow .2s}
+.form-control:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,200,150,.1)}
+select.form-control option{background:var(--card)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.toast-container{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast{padding:11px 16px;border-radius:10px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:9px;animation:tIn .28s cubic-bezier(.4,0,.2,1);min-width:220px}
+@keyframes tIn{from{transform:translateX(36px) scale(.96);opacity:0}to{transform:none;opacity:1}}
+.toast-success{background:rgba(76,175,80,.14);border:1px solid rgba(76,175,80,.3);color:#a7f3b0}
+.toast-error{background:rgba(244,67,54,.14);border:1px solid rgba(244,67,54,.3);color:#fca5a5}
+.toast-info{background:rgba(30,136,229,.14);border:1px solid rgba(30,136,229,.3);color:#93c5fd}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.09);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.18)}
+
+/* ── THEME PICKER ── */
+.theme-btn{position:fixed;bottom:24px;left:calc(var(--sidebar-w) + 16px);z-index:300;width:38px;height:38px;border-radius:50%;border:2px solid var(--border2);background:var(--card2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 4px 16px rgba(0,0,0,.4);transition:transform .2s}
+.theme-btn:hover{transform:scale(1.12)}
+.theme-panel{position:fixed;bottom:70px;left:calc(var(--sidebar-w) + 8px);z-index:300;background:var(--card2);border:1px solid var(--border2);border-radius:14px;padding:14px;width:200px;box-shadow:0 12px 40px rgba(0,0,0,.5);display:none}
+.theme-panel.open{display:block;animation:mIn .2s ease}
+.theme-panel h4{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:10px}
+.theme-swatches{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.swatch{width:28px;height:28px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .15s,border-color .15s}
+.swatch:hover{transform:scale(1.15)}
+.swatch.active{border-color:#fff;transform:scale(1.1)}
+.theme-label{font-size:11px;color:var(--muted);margin-top:6px;text-align:center}
+
+@media(max-width:768px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:none}.main{margin-left:0}.theme-btn{left:16px}}
+{% block extra_style %}{% endblock %}
+
+/* ══ Roster Hover Flyout ══ */
+.roster-nav-wrap { position: relative; }
+.roster-nav-trigger { display:flex !important; align-items:center !important; }
+.roster-arrow {
+  margin-left:auto !important;
+  font-size:14px !important;
+  width:auto !important;
+  opacity:1 !important;
+  transition:transform .2s;
+  flex-shrink:0;
+}
+.roster-nav-wrap:hover .roster-arrow { transform:rotate(90deg); }
+
+.roster-flyout {
+  visibility:hidden; opacity:0; pointer-events:none;
+  position:fixed; left:210px; top:auto;
+  background:#13171f;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:10px; min-width:215px; padding:6px;
+  box-shadow:6px 6px 30px rgba(0,0,0,.6);
+  z-index:99999;
+  transition:opacity .15s ease, visibility .15s ease;
+}
+/* Invisible bridge: fills gap between sidebar and flyout so mouse doesn't lose hover */
+.roster-flyout::before {
+  content:'';
+  position:absolute;
+  top:0; left:-12px;
+  width:12px; height:100%;
+}
+.roster-fly-item {
+  display:flex; align-items:center; gap:10px;
+  padding:9px 13px; border-radius:7px;
+  color:rgba(255,255,255,.72); text-decoration:none;
+  font-size:13px; font-weight:500; transition:all .14s;
+  white-space:nowrap;
+}
+.roster-fly-item:hover { background:rgba(0,200,150,.13); color:#00c896; }
+.roster-fly-item.rfi-active {
+  background:linear-gradient(135deg,rgba(0,200,150,.16),rgba(61,90,254,.09));
+  color:#00c896; font-weight:600;
+}
+.roster-fly-item i { font-size:12px; width:16px; text-align:center; opacity:.8; }
+.roster-fly-item:hover i, .roster-fly-item.rfi-active i { opacity:1; }
+</style>
+</head>
+<body>
+<aside class="sidebar" id="sidebar">
+  <div class="sb-logo" style="padding:10px 14px;">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="display:flex;align-items:flex-end;gap:3.5px">
+        <div style="display:flex;flex-direction:column;gap:2.5px"><div style="width:9px;height:9px;background:#e53935;border-radius:2.5px"></div></div>
+        <div style="display:flex;flex-direction:column;gap:2.5px"><div style="width:9px;height:9px;background:#f9a825;border-radius:2.5px"></div><div style="width:9px;height:9px;background:#f9a825;border-radius:2.5px"></div></div>
+        <div style="display:flex;flex-direction:column;gap:2.5px"><div style="width:9px;height:9px;background:#43a047;border-radius:2.5px"></div><div style="width:9px;height:9px;background:#43a047;border-radius:2.5px"></div><div style="width:9px;height:9px;background:#43a047;border-radius:2.5px"></div></div>
+        <div style="display:flex;flex-direction:column;gap:2.5px"><div style="width:9px;height:9px;background:#1e88e5;border-radius:2.5px"></div><div style="width:9px;height:9px;background:#1e88e5;border-radius:2.5px"></div><div style="width:9px;height:9px;background:#1e88e5;border-radius:2.5px"></div><div style="width:9px;height:9px;background:#1e88e5;border-radius:2.5px"></div></div>
+      </div>
+      <div style="line-height:1.1"><div style="font-size:16px;font-weight:900;color:#fff">EASY</div><div style="font-size:16px;font-weight:900;color:var(--accent)">SOURCE</div></div>
+    </div>
+  </div>
+  <nav>
+    <div class="nav-section">
+      <div class="nav-label">Main</div>
+      {% if session.role in ['admin','subadmin'] %}
+      <a href="/dashboard" class="nav-link {% if request.path=='/dashboard' %}active{% endif %}"><i class="fas fa-th-large"></i> Dashboard</a>
+      <a href="/employees" class="nav-link {% if '/employees' in request.path %}active{% endif %}"><i class="fas fa-user-friends"></i> Employees</a>
+      <a href="/attendance" class="nav-link {% if request.path=='/attendance' %}active{% endif %}"><i class="fas fa-calendar-check"></i> Attendance</a>
+      {% if session.role in ['admin','subadmin','head'] %}
+      <div class="roster-nav-wrap" id="rosterNavWrap">
+        <a href="#" onclick="return false;" class="nav-link {% if '/roster' in request.path %}active{% endif %} roster-nav-trigger" style="cursor:default;">
+          <i class="fas fa-calendar-alt"></i> Roster Management
+          <i class="fas fa-chevron-right roster-arrow"></i>
+        </a>
+        <div class="roster-flyout" id="rosterFlyout">
+          <a href="/roster?tab=rules" class="roster-fly-item" data-tab="rules">
+            <i class="fas fa-clipboard-list"></i> Roster Rules Template
+          </a>
+          <a href="/roster?tab=mapping" class="roster-fly-item" data-tab="mapping">
+            <i class="fas fa-users-cog"></i> Employee Mapping
+          </a>
+          <a href="/roster?tab=report" class="roster-fly-item" data-tab="report">
+            <i class="fas fa-file-excel"></i> Roster Report
+          </a>
+          <a href="/roster?tab=notify" class="roster-fly-item" data-tab="notify">
+            <i class="fab fa-whatsapp"></i> WA Notify
+          </a>
+        </div>
+      </div>
+      {% endif %}
+      {% endif %}
+      <a href="/my-attendance" class="nav-link {% if '/my-attendance' in request.path %}active{% endif %}"><i class="fas fa-user-clock"></i> My Attendance</a>
+      <a href="/profile" class="nav-link {% if '/profile' in request.path %}active{% endif %}"><i class="fas fa-id-card"></i> My Profile</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Tools</div>
+      {% if session.role in ['admin','subadmin'] or session.can_whatsapp %}
+      <a href="/whatsapp" class="nav-link {% if '/whatsapp' in request.path %}active{% endif %}"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+      {% endif %}
+      {% if session.role in ['admin','subadmin'] %}
+      <a href="/reports" class="nav-link {% if '/reports' in request.path %}active{% endif %}"><i class="fas fa-chart-bar"></i> Reports</a>
+      {% endif %}
+    </div>
+    {% if session.role == 'admin' %}
+    <div class="nav-section">
+      <div class="nav-label">Admin</div>
+      <a href="/settings" class="nav-link {% if '/settings' in request.path and '/location' not in request.path %}active{% endif %}"><i class="fas fa-cog"></i> Settings</a>
+      <a href="/location-settings" class="nav-link {% if '/location-settings' in request.path %}active{% endif %}"><i class="fas fa-map-marker-alt"></i> Location Settings</a>
+      <a href="/employee-location" class="nav-link {% if '/employee-location' in request.path %}active{% endif %}"><i class="fas fa-user-map-marker" style="font-size:13px"></i> Emp Location</a>
+      <a href="/mobile-setup" class="nav-link {% if '/mobile-setup' in request.path %}active{% endif %}"><i class="fas fa-mobile-alt"></i> Mobile Setup</a>
+    </div>
+    {% endif %}
+  </nav>
+  <div class="sb-user">
+    <div class="u-av">{{ session.name[0].upper() if session.name else 'U' }}</div>
+    <div class="u-info">
+      <div class="u-name">{{ session.name }}</div>
+      <span class="u-role role-{{ session.role }}">{{ session.role }}</span>
+    </div>
+    <a href="/logout" class="logout-btn" title="Logout"><i class="fas fa-sign-out-alt"></i></a>
+  </div>
+</aside>
+<main class="main">
+  <div class="topbar">
+    <div><h1>{% block page_title %}{% endblock %}</h1><div class="bc">{% block breadcrumb %}{% endblock %}</div></div>
+    <div class="topbar-right">
+      <a href="/profile" style="color:var(--muted);text-decoration:none;padding:6px 10px;border-radius:7px;font-size:12px;border:1px solid var(--border);transition:all .2s"
+         onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--muted)'">
+        👤 {{ session.name or session.username }}
+      </a>
+      <div class="clock-chip" id="clock">—</div>
+    </div>
+  </div>
+  <div class="content">{% block content %}{% endblock %}</div>
+</main>
+
+<!-- THEME PICKER BUTTON -->
+<button class="theme-btn" onclick="toggleThemePanel()" title="Theme Change Karo">🎨</button>
+<div class="theme-panel" id="themePanel">
+  <h4>🎨 Colour Theme</h4>
+  <div class="theme-swatches" id="themeSwatches"></div>
+  <div class="theme-label" id="themeLabel">Default</div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+<script>
+// ── Clock ──
+function updateClock(){const n=new Date();const el=document.getElementById('clock');if(el)el.textContent=n.toLocaleString('en-IN',{weekday:'short',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}
+setInterval(updateClock,1000);updateClock();
+
+// ── Toast ──
+function showToast(msg,type='success'){const t=document.createElement('div');t.className=`toast toast-${type}`;t.innerHTML=`<i class="fas fa-${type==='success'?'check-circle':type==='info'?'info-circle':'exclamation-circle'}"></i>${msg}`;document.getElementById('toastContainer').appendChild(t);setTimeout(()=>{t.style.cssText='opacity:0;transform:translateX(36px);transition:all .28s';setTimeout(()=>t.remove(),300)},3000)}
+
+// ── API helper ──
+async function api(url,data){const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});return r.json()}
+
+// ── Modal helper ──
+function closeModal(id){document.getElementById(id).classList.remove('open')}
+document.addEventListener('click',e=>{if(e.target.classList.contains('modal-overlay'))e.target.classList.remove('open')})
+
+// ── THEME SYSTEM ──
+const THEMES = [
+  {name:'Default',    accent:'#00c896', accent2:'#3d5afe', bg:'#0a0d14'},
+  {name:'Ocean Blue', accent:'#38bdf8', accent2:'#6366f1', bg:'#070d14'},
+  {name:'Purple',     accent:'#a78bfa', accent2:'#ec4899', bg:'#0c0a14'},
+  {name:'Sunset',     accent:'#fb923c', accent2:'#f43f5e', bg:'#140a0a'},
+  {name:'Gold',       accent:'#f59e0b', accent2:'#10b981', bg:'#100e00'},
+  {name:'Rose',       accent:'#f472b6', accent2:'#818cf8', bg:'#120a10'},
+  {name:'Cyan',       accent:'#22d3ee', accent2:'#34d399', bg:'#040e11'},
+  {name:'White',      accent:'#00c896', accent2:'#3d5afe', bg:'#f0f4f8', text:'#1a202c'},
+];
+
+function applyTheme(idx){
+  const t=THEMES[idx];
+  const r=document.documentElement.style;
+  r.setProperty('--accent',t.accent);
+  r.setProperty('--accent2',t.accent2);
+  r.setProperty('--bg',t.bg);
+  if(t.text){
+    r.setProperty('--text',t.text);
+    r.setProperty('--text2','#4a5568');
+    r.setProperty('--card','#ffffff');
+    r.setProperty('--card2','#f7fafc');
+    r.setProperty('--border','rgba(0,0,0,.08)');
+    r.setProperty('--border2','rgba(0,0,0,.14)');
+    r.setProperty('--surface','#e2e8f0');
+    r.setProperty('--muted','#718096');
+  } else {
+    r.setProperty('--text','#e2e8f5');
+    r.setProperty('--text2','#94a3b8');
+    r.setProperty('--card','#111826');
+    r.setProperty('--card2','#131d2c');
+    r.setProperty('--border','rgba(255,255,255,.06)');
+    r.setProperty('--border2','rgba(255,255,255,.11)');
+    r.setProperty('--surface','#0d1120');
+    r.setProperty('--muted','#4a5568');
+  }
+  localStorage.setItem('hrms_theme',idx);
+  document.getElementById('themeLabel').textContent=t.name;
+  document.querySelectorAll('.swatch').forEach((s,i)=>s.classList.toggle('active',i===idx));
+}
+
+function buildSwatches(){
+  const el=document.getElementById('themeSwatches');
+  el.innerHTML=THEMES.map((t,i)=>`<div class="swatch" style="background:${t.accent}" title="${t.name}" onclick="applyTheme(${i})"></div>`).join('');
+}
+
+function toggleThemePanel(){
+  document.getElementById('themePanel').classList.toggle('open');
+}
+
+// Close theme panel on outside click
+document.addEventListener('click',e=>{
+  const panel=document.getElementById('themePanel');
+  const btn=document.querySelector('.theme-btn');
+  if(panel && !panel.contains(e.target) && e.target!==btn) panel.classList.remove('open');
+});
+
+// Init theme
+buildSwatches();
+const savedTheme=parseInt(localStorage.getItem('hrms_theme')||'0');
+applyTheme(savedTheme);
+</script>
+{% block scripts %}{% endblock %}
+
+<script>
+(function(){
+  var wrap   = document.getElementById('rosterNavWrap');
+  var flyout = document.getElementById('rosterFlyout');
+  if(!wrap || !flyout) return;
+
+  var hideTimer = null;
+
+  function showFlyout() {
+    if(hideTimer){ clearTimeout(hideTimer); hideTimer=null; }
+    var rect = wrap.getBoundingClientRect();
+    flyout.style.top  = rect.top + 'px';
+    flyout.style.visibility   = 'visible';
+    flyout.style.opacity      = '1';
+    flyout.style.pointerEvents= 'all';
+  }
+  function hideFlyout() {
+    hideTimer = setTimeout(function(){
+      flyout.style.visibility   = 'hidden';
+      flyout.style.opacity      = '0';
+      flyout.style.pointerEvents= 'none';
+    }, 200);
+  }
+
+  wrap.addEventListener('mouseenter', showFlyout);
+  wrap.addEventListener('mouseleave', hideFlyout);
+  flyout.addEventListener('mouseenter', showFlyout);
+  flyout.addEventListener('mouseleave', hideFlyout);
+
+  // Highlight active sub-item
+  if(window.location.pathname === '/roster') {
+    var tab = new URLSearchParams(window.location.search).get('tab') || 'roster';
+    document.querySelectorAll('.roster-fly-item').forEach(function(el){
+      if(el.dataset.tab === tab) el.classList.add('rfi-active');
+    });
+  }
+})();
+</script>
+</body>
+</html>

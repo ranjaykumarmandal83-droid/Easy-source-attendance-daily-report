@@ -1,0 +1,392 @@
+{% extends "base.html" %}
+{% block title %}Roster Rules – HRMS{% endblock %}
+{% block page_title %}Roster Rules{% endblock %}
+{% block breadcrumb %}Employee Wise Roster Rules{% endblock %}
+
+{% block extra_style %}
+.rules-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
+.rule-card{background:rgba(15,20,35,.85);border:1px solid var(--border);border-radius:14px;padding:18px;transition:border-color .2s}
+.rule-card:hover{border-color:rgba(0,200,150,.3)}
+.rule-card.has-rule{border-color:rgba(0,200,150,.35);background:rgba(0,200,150,.04)}
+.emp-avatar{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0}
+.day-pill{display:flex;flex-direction:column;align-items:center;gap:4px}
+.day-label{font-size:9px;color:var(--muted);font-weight:700;text-transform:uppercase}
+.day-sel{padding:4px 3px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--text);outline:none;width:62px;text-align:center}
+.day-sel:focus{border-color:var(--accent)}
+.rule-type-btn{padding:5px 12px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);transition:all .15s}
+.rule-type-btn.active{border-color:var(--accent);background:rgba(0,200,150,.12);color:var(--accent)}
+.rotation-input{width:100%;padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--text);font-size:12px;outline:none;font-family:monospace}
+.rotation-input:focus{border-color:var(--accent)}
+.badge-rule{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700}
+.badge-fixed{background:rgba(0,200,150,.12);color:var(--accent);border:1px solid rgba(0,200,150,.25)}
+.badge-monthly_sat{background:rgba(122,162,247,.12);color:#7aa2f7;border:1px solid rgba(122,162,247,.25)}
+.badge-rotation{background:rgba(255,183,77,.12);color:#ffb74d;border:1px solid rgba(255,183,77,.25)}
+.shift-W  {background:rgba(76,175,80,.18);color:#69db7c}
+.shift-WO {background:rgba(100,100,120,.3);color:#9ca3af}
+.shift-WFH{background:rgba(165,180,252,.15);color:#a5b4fc}
+.shift-OD {background:rgba(255,152,0,.15);color:#ffb74d}
+.shift-L  {background:rgba(124,58,237,.15);color:#c4b5fd}
+.shift-HD {background:rgba(122,162,247,.15);color:#7aa2f7}
+.apply-bar{background:rgba(15,20,35,.9);border:1px solid var(--border);border-radius:12px;padding:14px 20px;margin-bottom:18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.search-bar{width:100%;padding:9px 14px;border-radius:9px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--text);font-size:13px;outline:none;margin-bottom:16px}
+.search-bar:focus{border-color:var(--accent)}
+{% endblock %}
+
+{% block content %}
+
+<!-- APPLY ALL RULES BAR -->
+<div class="apply-bar">
+  <span style="font-size:13px;font-weight:700">🚀 Saare Rules Ek Saath Apply Karo</span>
+  <input type="month" id="applyMonth" class="form-control" style="width:160px"
+    value="{{ now.strftime('%Y-%m') if now else '' }}">
+  <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+    <input type="checkbox" id="applyOverwrite" style="accent-color:var(--accent);width:14px;height:14px">
+    Existing overwrite karo
+  </label>
+  <button class="btn btn-primary" onclick="applyAllRules()" id="applyBtn">
+    ▶ Apply All Rules to Month
+  </button>
+  <div id="applyResult" style="font-size:12px;color:var(--accent);display:none"></div>
+</div>
+
+<!-- STATS + SEARCH -->
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap">
+  <div style="display:flex;gap:8px">
+    <div style="padding:5px 14px;border-radius:20px;background:rgba(0,200,150,.08);border:1px solid rgba(0,200,150,.2);font-size:12px">
+      Total Emp: <strong style="color:var(--accent)">{{ employees|length }}</strong>
+    </div>
+    <div style="padding:5px 14px;border-radius:20px;background:rgba(122,162,247,.08);border:1px solid rgba(122,162,247,.2);font-size:12px">
+      Rules Set: <strong style="color:#7aa2f7" id="rulesCount">{{ rules|length }}</strong>
+    </div>
+    <div style="padding:5px 14px;border-radius:20px;background:rgba(255,183,77,.08);border:1px solid rgba(255,183,77,.2);font-size:12px">
+      No Rule: <strong style="color:#ffb74d" id="noRuleCount">{{ employees|length - rules|length }}</strong>
+    </div>
+  </div>
+  <div style="margin-left:auto;display:flex;gap:8px">
+    <select id="officeFilter" class="form-control" style="width:185px" onchange="filterCards()">
+      <option value="">🏢 All Offices</option>
+      <option>Head Office Delhi</option>
+      <option>Branch Office Gurgaon</option>
+      <option>Client Side</option>
+      <option>Work From Home</option>
+      <option>Field</option>
+    </select>
+    <select id="ruleFilter" class="form-control" style="width:140px" onchange="filterCards()">
+      <option value="">All Employees</option>
+      <option value="has">✅ Has Rule</option>
+      <option value="no">⚠️ No Rule</option>
+    </select>
+  </div>
+</div>
+<input type="text" class="search-bar" id="empSearch" placeholder="🔍 Employee name / ID / dept search..."
+  oninput="filterCards()">
+
+<!-- EMPLOYEE RULE CARDS -->
+<div class="rules-grid" id="rulesGrid">
+  {% for emp in employees %}
+  {% set rule = rules.get(emp.emp_id, {}) %}
+  <div class="rule-card {% if rule %}has-rule{% endif %}" id="card-{{ emp.emp_id }}"
+    data-name="{{ emp.name|lower }}"
+    data-empid="{{ emp.emp_id|lower }}"
+    data-dept="{{ (emp.department or '')|lower }}"
+    data-office="{{ emp.office_setting or '' }}"
+    data-hasrule="{{ 'yes' if rule else 'no' }}">
+
+    <!-- Card Header -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+      <div class="emp-avatar" style="background:rgba(0,200,150,.1);color:var(--accent)">
+        {{ emp.name[0]|upper }}
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ emp.name }}</div>
+        <div style="font-size:10.5px;color:var(--muted)">{{ emp.emp_id }}{% if emp.department %} · {{ emp.department }}{% endif %}</div>
+        {% if emp.office_setting %}
+        <span style="font-size:10px;padding:1px 7px;border-radius:10px;background:rgba(79,70,229,.12);color:#a5b4fc">🏢 {{ emp.office_setting }}</span>
+        {% endif %}
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+        {% if rule %}
+        <span class="badge-rule badge-{{ rule.rule_type or 'fixed' }}">
+          {{ {'fixed':'Fixed','monthly_sat':'Month Sat','rotation':'Rotation'}.get(rule.rule_type,'Fixed') }}
+        </span>
+        {% else %}
+        <span style="font-size:10px;color:var(--muted);padding:2px 8px;border:1px solid var(--border);border-radius:10px">No Rule</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Rule Type Selector -->
+    <div style="display:flex;gap:5px;margin-bottom:12px;flex-wrap:wrap" id="typeBtns-{{ emp.emp_id }}">
+      <button class="rule-type-btn {% if not rule or rule.rule_type=='fixed' %}active{% endif %}"
+        onclick="setRuleType('{{ emp.emp_id }}','fixed',this)">📋 Fixed</button>
+      <button class="rule-type-btn {% if rule and rule.rule_type=='monthly_sat' %}active{% endif %}"
+        onclick="setRuleType('{{ emp.emp_id }}','monthly_sat',this)">📅 Month Sat</button>
+      <button class="rule-type-btn {% if rule and rule.rule_type=='rotation' %}active{% endif %}"
+        onclick="setRuleType('{{ emp.emp_id }}','rotation',this)">🔄 Rotation</button>
+    </div>
+
+    <!-- FIXED / MONTHLY_SAT: 7 day dropdowns -->
+    <div id="fixedPanel-{{ emp.emp_id }}" {% if rule and rule.rule_type=='rotation' %}style="display:none"{% endif %}>
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:10px">
+        {% for day,label in [('mon','Mon'),('tue','Tue'),('wed','Wed'),('thu','Thu'),('fri','Fri'),('sat','Sat'),('sun','Sun')] %}
+        <div class="day-pill">
+          <span class="day-label">{{ label }}</span>
+          <select class="day-sel shift-{{ rule.get(day,'W') if rule else ('WO' if day in ['sat','sun'] else 'W') }}"
+            id="day-{{ emp.emp_id }}-{{ day }}"
+            onchange="onDayChange(this,'{{ emp.emp_id }}','{{ day }}')"
+            {% if rule and rule.rule_type=='monthly_sat' and day=='sat' %}disabled title="Monthly pattern controls Sat"{% endif %}>
+            <option value="W"   {% if (rule.get(day) if rule else ('WO' if day in ['sat','sun'] else 'W'))=='W'  %}selected{% endif %}>W</option>
+            <option value="WO"  {% if (rule.get(day) if rule else ('WO' if day in ['sat','sun'] else 'W'))=='WO' %}selected{% endif %}>WO</option>
+            <option value="WFH" {% if (rule.get(day) if rule else '')=='WFH' %}selected{% endif %}>WFH</option>
+            <option value="OD"  {% if (rule.get(day) if rule else '')=='OD'  %}selected{% endif %}>OD</option>
+            <option value="L"   {% if (rule.get(day) if rule else '')=='L'   %}selected{% endif %}>L</option>
+            <option value="HD"  {% if (rule.get(day) if rule else '')=='HD'  %}selected{% endif %}>HD</option>
+          </select>
+        </div>
+        {% endfor %}
+      </div>
+      {% if rule and rule.rule_type=='monthly_sat' %}
+      <div style="font-size:10.5px;color:#7aa2f7;margin-bottom:8px">ℹ️ Sat: 1st & Last = W, Rest = WO (auto)</div>
+      {% else %}
+      <div id="satNote-{{ emp.emp_id }}" style="font-size:10.5px;color:var(--muted);margin-bottom:8px;display:none"></div>
+      {% endif %}
+    </div>
+
+    <!-- ROTATION PANEL -->
+    <div id="rotationPanel-{{ emp.emp_id }}" {% if not rule or rule.rule_type!='rotation' %}style="display:none"{% endif %}>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:6px">
+        Pattern (weekly rotation, comma se alag karo):<br>
+        <span style="font-size:10px;color:#7aa2f7">Example: W/W/W/W/W/W/WO, W/W/WFH/W/WFH/WO/WO</span>
+      </div>
+      <textarea class="rotation-input" rows="2" id="rotation-{{ emp.emp_id }}"
+        placeholder="W/W/W/W/W/W/WO, W/W/WFH/W/WFH/WO/WO">{{ rule.rotation_pattern if rule else '' }}</textarea>
+      <div style="font-size:10px;color:var(--muted);margin-top:4px">Format: Mon/Tue/Wed/Thu/Fri/Sat/Sun per week</div>
+    </div>
+
+    <!-- Notes -->
+    <input type="text" class="form-control" id="notes-{{ emp.emp_id }}"
+      placeholder="📝 Notes (optional)"
+      value="{{ rule.notes if rule else '' }}"
+      style="font-size:12px;padding:5px 10px;margin-bottom:10px">
+
+    <!-- Quick presets -->
+    <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px">
+      <span style="font-size:10px;color:var(--muted);align-self:center">Quick:</span>
+      <button onclick="applyPreset('{{ emp.emp_id }}','office5')" style="font-size:10px;padding:2px 8px;border-radius:6px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted)">5 Day Office</button>
+      <button onclick="applyPreset('{{ emp.emp_id }}','wfh3')" style="font-size:10px;padding:2px 8px;border-radius:6px;cursor:pointer;border:1px solid rgba(165,180,252,.3);background:transparent;color:#a5b4fc">Mon-Wed Office, Thu-Fri WFH</button>
+      <button onclick="applyPreset('{{ emp.emp_id }}','alt')" style="font-size:10px;padding:2px 8px;border-radius:6px;cursor:pointer;border:1px solid rgba(255,183,77,.3);background:transparent;color:#ffb74d">Alternate WFH</button>
+    </div>
+
+    <!-- Save / Delete buttons -->
+    <div style="display:flex;gap:6px">
+      <button class="btn btn-primary btn-sm" style="flex:1" onclick="saveRule('{{ emp.emp_id }}')">💾 Save Rule</button>
+      {% if rule %}
+      <button class="btn btn-danger btn-sm" onclick="deleteRule('{{ emp.emp_id }}')">🗑</button>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const ALL_RULES = {{ rules | tojson }};
+let ruleTypes   = {};  // emp_id → current rule type
+
+// Init rule types from existing data
+Object.entries(ALL_RULES).forEach(([eid, r]) => {
+  ruleTypes[eid] = r.rule_type || 'fixed';
+});
+
+// ── Rule Type Switch ──
+function setRuleType(empId, type, btn) {
+  ruleTypes[empId] = type;
+  // Update buttons
+  document.querySelectorAll(`#typeBtns-${empId} .rule-type-btn`).forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  const fixedPanel    = document.getElementById(`fixedPanel-${empId}`);
+  const rotationPanel = document.getElementById(`rotationPanel-${empId}`);
+  const satSel        = document.getElementById(`day-${empId}-sat`);
+  const satNote       = document.getElementById(`satNote-${empId}`);
+
+  if (type === 'rotation') {
+    if (fixedPanel)    fixedPanel.style.display    = 'none';
+    if (rotationPanel) rotationPanel.style.display = '';
+  } else {
+    if (fixedPanel)    fixedPanel.style.display    = '';
+    if (rotationPanel) rotationPanel.style.display = 'none';
+
+    if (type === 'monthly_sat') {
+      // Disable SAT — controlled by monthly pattern
+      if (satSel) { satSel.disabled = true; satSel.value = 'WO'; }
+      if (satNote) { satNote.style.display = 'block'; satNote.textContent = 'ℹ️ Sat: 1st & Last = W, Rest = WO (auto)'; satNote.style.color = '#7aa2f7'; }
+    } else {
+      if (satSel) satSel.disabled = false;
+      if (satNote) satNote.style.display = 'none';
+    }
+  }
+}
+
+// ── Day select color update ──
+function onDayChange(sel, empId, day) {
+  sel.className = `day-sel shift-${sel.value}`;
+}
+
+// ── Quick Presets ──
+function applyPreset(empId, preset) {
+  const days = ['mon','tue','wed','thu','fri','sat','sun'];
+  const presets = {
+    'office5': ['W','W','W','W','W','WO','WO'],
+    'wfh3':    ['W','W','W','WFH','WFH','WO','WO'],
+    'alt':     ['W','WFH','W','WFH','W','WO','WO'],
+  };
+  const vals = presets[preset];
+  if (!vals) return;
+  // Switch to fixed type
+  const fixedBtn = document.querySelector(`#typeBtns-${empId} .rule-type-btn`);
+  if (fixedBtn) setRuleType(empId, 'fixed', fixedBtn);
+
+  days.forEach((d,i) => {
+    const sel = document.getElementById(`day-${empId}-${d}`);
+    if (sel) { sel.value = vals[i]; sel.className = `day-sel shift-${vals[i]}`; }
+  });
+}
+
+// ── Save Rule ──
+async function saveRule(empId) {
+  const days = ['mon','tue','wed','thu','fri','sat','sun'];
+  const type = ruleTypes[empId] || 'fixed';
+  const payload = {
+    emp_id: empId,
+    rule_type: type,
+    rotation_pattern: (document.getElementById(`rotation-${empId}`)?.value || '').trim(),
+    notes: (document.getElementById(`notes-${empId}`)?.value || '').trim(),
+  };
+  days.forEach(d => {
+    const sel = document.getElementById(`day-${empId}-${d}`);
+    payload[d] = sel ? sel.value : 'W';
+  });
+
+  const btn = document.querySelector(`#card-${empId} .btn-primary`);
+  if (btn) { btn.innerHTML = '⏳...'; btn.disabled = true; }
+
+  const res = await fetch('/api/roster-rules/save', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  }).then(r=>r.json());
+
+  if (btn) { btn.innerHTML = '💾 Save Rule'; btn.disabled = false; }
+
+  if (res.success) {
+    const card = document.getElementById(`card-${empId}`);
+    if (card) {
+      card.classList.add('has-rule');
+      card.dataset.hasrule = 'yes';
+      // Update badge
+      const badgeLabels = {fixed:'Fixed',monthly_sat:'Month Sat',rotation:'Rotation'};
+      const badgeClasses = {fixed:'badge-fixed',monthly_sat:'badge-monthly_sat',rotation:'badge-rotation'};
+      let badge = card.querySelector('.badge-rule');
+      if (!badge) {
+        badge = document.createElement('span');
+        badge.className = 'badge-rule';
+        card.querySelector('[data-hasrule]')?.querySelector('div:last-child')?.appendChild(badge);
+      }
+      if (badge) {
+        badge.className = `badge-rule ${badgeClasses[type]||'badge-fixed'}`;
+        badge.textContent = badgeLabels[type] || type;
+      }
+    }
+    updateCounts();
+    showToast(`✅ ${empId} ka rule saved!`);
+  } else {
+    showToast('❌ Error: ' + (res.error||'failed'), 'error');
+  }
+}
+
+// ── Delete Rule ──
+async function deleteRule(empId) {
+  if (!confirm('Is employee ka roster rule delete karna chahte ho?')) return;
+  const res = await fetch('/api/roster-rules/delete', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({emp_id: empId})
+  }).then(r=>r.json());
+
+  if (res.success) {
+    const card = document.getElementById(`card-${empId}`);
+    if (card) {
+      card.classList.remove('has-rule');
+      card.dataset.hasrule = 'no';
+    }
+    updateCounts();
+    showToast(`✅ Rule deleted`);
+    setTimeout(() => location.reload(), 800);
+  }
+}
+
+// ── Apply All Rules to Month ──
+async function applyAllRules() {
+  const monthVal  = document.getElementById('applyMonth').value;
+  const overwrite = document.getElementById('applyOverwrite').checked;
+  const resultEl  = document.getElementById('applyResult');
+  const btn       = document.getElementById('applyBtn');
+  if (!monthVal) { showToast('Month select karo', 'error'); return; }
+
+  const [year, month] = monthVal.split('-').map(Number);
+  btn.innerHTML = '⏳ Applying...'; btn.disabled = true;
+  resultEl.style.display = 'none';
+
+  const res = await fetch('/api/roster-rules/apply', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({year, month, overwrite})
+  }).then(r=>r.json());
+
+  btn.innerHTML = '▶ Apply All Rules to Month'; btn.disabled = false;
+
+  if (res.success) {
+    resultEl.style.display = 'block';
+    resultEl.innerHTML = `✅ <strong>${res.saved}</strong> weeks saved${res.skipped ? ' · ' + res.skipped + ' skipped' : ''}`;
+    showToast(`✅ Rules applied! ${res.saved} roster records created`);
+  } else {
+    showToast('❌ Error applying rules', 'error');
+  }
+}
+
+// ── Filter cards ──
+function filterCards() {
+  const q      = document.getElementById('empSearch').value.toLowerCase();
+  const office = document.getElementById('officeFilter').value;
+  const ruleF  = document.getElementById('ruleFilter').value;
+
+  document.querySelectorAll('.rule-card').forEach(card => {
+    const matchQ = !q ||
+      card.dataset.name.includes(q) ||
+      card.dataset.empid.includes(q) ||
+      card.dataset.dept.includes(q);
+    const matchO = !office || card.dataset.office === office;
+    const matchR = !ruleF  ||
+      (ruleF==='has' && card.dataset.hasrule==='yes') ||
+      (ruleF==='no'  && card.dataset.hasrule==='no');
+    card.style.display = (matchQ && matchO && matchR) ? '' : 'none';
+  });
+}
+
+function updateCounts() {
+  const cards = document.querySelectorAll('.rule-card');
+  const withRule = [...cards].filter(c => c.classList.contains('has-rule')).length;
+  const ruleEl = document.getElementById('rulesCount');
+  const noRuleEl = document.getElementById('noRuleCount');
+  if (ruleEl) ruleEl.textContent = withRule;
+  if (noRuleEl) noRuleEl.textContent = cards.length - withRule;
+}
+
+// Set current month on load
+document.addEventListener('DOMContentLoaded', () => {
+  const now = new Date();
+  const m = String(now.getMonth()+1).padStart(2,'0');
+  document.getElementById('applyMonth').value = `${now.getFullYear()}-${m}`;
+});
+</script>
+{% endblock %}

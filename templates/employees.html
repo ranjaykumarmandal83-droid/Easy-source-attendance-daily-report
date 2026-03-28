@@ -1,0 +1,708 @@
+{% extends "base.html" %}
+{% block title %}Employees – HRMS{% endblock %}
+{% block page_title %}Employees{% endblock %}
+{% block breadcrumb %}Employee Management{% endblock %}
+
+{% block extra_style %}
+.emp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; 
+  max-height:calc(100vh - 380px);overflow-y:auto;
+  scrollbar-width:thin;scrollbar-color:rgba(0,200,150,.2) transparent;
+}
+.emp-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; transition: border-color 0.2s; }
+.emp-card:hover { border-color: rgba(0,200,150,0.4); }
+.emp-avatar { width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; color: white; margin-bottom: 12px; }
+.emp-name { font-size: 15px; font-weight: 600; }
+.emp-id { font-size: 11px; color: var(--muted); }
+.emp-dept { font-size: 12px; color: var(--accent); margin-top: 4px; }
+.emp-phone { font-size: 12px; color: var(--muted); margin-top: 6px; }
+.emp-actions { display: flex; gap: 8px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+.search-bar { display: flex; gap: 10px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
+.search-input { flex: 1; min-width: 180px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; color: var(--text); font-family: inherit; font-size: 14px; outline: none; }
+.search-input:focus { border-color: var(--accent); }
+.filter-select { background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; color: var(--text); font-family: inherit; font-size: 13px; outline: none; cursor: pointer; }
+.filter-select:focus { border-color: var(--accent); }
+.view-toggle { display: flex; background: rgba(255,255,255,0.04); border-radius: 8px; padding: 4px; }
+.view-btn { padding: 6px 10px; border-radius: 6px; cursor: pointer; color: var(--muted); border: none; background: none; font-size: 14px; }
+.view-btn.active { background: var(--accent); color: #0a0e1a; }
+.badge-office { display:inline-block; font-size:10.5px; padding:2px 8px; border-radius:12px; margin-top:4px; }
+/* List view sticky header */
+.list-table thead th { position:sticky; top:0; z-index:5; background:rgba(5,8,18,.97); }
+.list-table-wrap { max-height:calc(100vh - 400px); overflow-y:auto; border-radius:10px; border:1px solid var(--border); scrollbar-width:thin; scrollbar-color:rgba(0,200,150,.2) transparent; }
+
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">👥 Employee Directory</span>
+    <div style="display:flex;gap:10px">
+      {% if session.role in ['admin','subadmin'] %}
+      <button class="btn btn-secondary btn-sm" onclick="document.getElementById('bulkModal').classList.add('open')">
+        <i class="fas fa-upload"></i> Bulk Upload
+      </button>
+      <button class="btn btn-primary btn-sm" onclick="openAddModal()">
+        <i class="fas fa-plus"></i> Add Employee
+      </button>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Search + Filters -->
+  <div class="search-bar">
+    <input class="search-input" id="searchInput" placeholder="🔍 Search by name, department, ID..." oninput="filterEmployees()">
+    <select class="filter-select" id="filterOfficeSetting" onchange="filterEmployees()">
+      <option value="">🏢 All Office Settings</option>
+      <option value="Head Office Delhi">🏛️ Head Office Delhi</option>
+      <option value="Branch Office Gurgaon">🏬 Branch Office Gurgaon</option>
+      <option value="Client Side">🤝 Client Side</option>
+      <option value="Work From Home">🏠 Work From Home</option>
+      <option value="Field">🚗 Field</option>
+    </select>
+    <select class="filter-select" id="filterLocation" onchange="filterEmployees()">
+      <option value="">📍 All Locations</option>
+    </select>
+    <div class="view-toggle">
+      <button class="view-btn active" id="gridBtn" onclick="setView('grid')"><i class="fas fa-th"></i></button>
+      <button class="view-btn" id="listBtn" onclick="setView('list')"><i class="fas fa-list"></i></button>
+    </div>
+  </div>
+
+  <!-- Count Bar -->
+  <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px;padding:10px 14px;
+    background:rgba(255,255,255,.025);border:1px solid var(--border);border-radius:10px">
+    <span style="font-size:12px;font-weight:700;color:var(--text2)">📊 Employees:</span>
+    <span style="font-size:13px;font-weight:800;color:var(--accent)" id="countTotal">—</span>
+    <span style="font-size:11px;color:var(--muted)">total</span>
+    <span style="color:var(--border)">|</span>
+    <span style="font-size:12px;font-weight:700;color:#69db7c" id="countActive">—</span>
+    <span style="font-size:11px;color:var(--muted)">active</span>
+    <span style="color:var(--border)">|</span>
+    <span style="font-size:12px;font-weight:700;color:#ff6b6b" id="countLeft">—</span>
+    <span style="font-size:11px;color:var(--muted)">left (inactive)</span>
+    <span style="color:var(--border)">|</span>
+    <span style="font-size:12px;font-weight:700;color:var(--text2)" id="countFiltered">—</span>
+    <span style="font-size:11px;color:var(--muted)">shown</span>
+  </div>
+
+  <div class="emp-grid" id="empGrid">
+    {% for emp in employees %}
+    <div class="emp-card"
+         data-search="{{ emp.name|lower }} {{ emp.department|lower }} {{ emp.emp_id|lower }} {{ (emp.office_setting or '')|lower }} {{ (emp.location or '')|lower }}"
+         data-office="{{ emp.office_setting or '' }}"
+         data-location="{{ emp.location or '' }}"
+         data-id="{{ emp.id }}"
+         data-empid="{{ emp.emp_id }}"
+         data-name="{{ emp.name|e }}"
+         data-phone="{{ emp.phone or '' }}"
+         data-email="{{ emp.email or '' }}"
+         data-dept="{{ emp.department or '' }}"
+         data-desig="{{ emp.designation or '' }}"
+         data-join="{{ emp.join_date or '' }}"
+         data-loc="{{ emp.location or '' }}"
+         data-os="{{ emp.office_setting or '' }}">
+      <div class="emp-avatar">{{ emp.name[0].upper() }}</div>
+      <div class="emp-name">{{ emp.name }}</div>
+      <div class="emp-id">ID: {{ emp.emp_id }}</div>
+      <div class="emp-dept">{{ emp.designation }} · {{ emp.department }}</div>
+      <div class="emp-phone">
+        <i class="fas fa-phone" style="font-size:10px"></i> {{ emp.phone or '—' }}
+        {% if emp.location %}
+        &nbsp;·&nbsp; 📍 {{ emp.location }}
+        {% endif %}
+      </div>
+      {% if emp.office_setting %}
+      <div>
+        <span class="badge-office" style="background:rgba(79,70,229,.15);color:#a5b4fc;">
+          🏢 {{ emp.office_setting }}
+        </span>
+        {% if emp.emp_id in head_ids %}
+        <span class="badge-office" style="background:rgba(245,158,11,.15);color:#f59e0b;border:1px solid rgba(245,158,11,.28);margin-left:4px">
+          👑 Head
+        </span>
+        {% endif %}
+      </div>
+      {% else %}
+        {% if emp.emp_id in head_ids %}
+        <div>
+          <span class="badge-office" style="background:rgba(245,158,11,.15);color:#f59e0b;border:1px solid rgba(245,158,11,.28)">
+            👑 Head
+          </span>
+        </div>
+        {% endif %}
+      {% endif %}
+      {% if session.role in ['admin','subadmin'] %}
+      <div class="emp-actions">
+        <button class="btn btn-secondary btn-sm" style="flex:1" onclick="editEmpFromCard(this)">
+          <i class="fas fa-edit"></i> Edit
+        </button>
+        {% if session.role == 'admin' %}
+          {% if emp.emp_id in head_ids %}
+          <button class="btn btn-sm" style="background:rgba(245,158,11,.15);color:#f59e0b;border:1px solid rgba(245,158,11,.3);cursor:default" title="Already Head hai">
+            👑
+          </button>
+          {% else %}
+          <button class="btn btn-sm" style="background:rgba(0,200,150,.08);color:var(--accent);border:1px solid rgba(0,200,150,.2)"
+            onclick="openMakeHead('{{ emp.emp_id }}','{{ emp.name|e }}','{{ emp.department|e }}')"
+            title="Head banao">
+            👑
+          </button>
+          {% endif %}
+        {% endif %}
+        <button class="btn btn-danger btn-sm" onclick="deleteEmp({{ emp.id }}, '{{ emp.name|e }}')">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+      {% endif %}
+    </div>
+    {% else %}
+    <p style="color:var(--muted);grid-column:1/-1;text-align:center;padding:40px">No employees found.</p>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-overlay" id="empModal">
+  <div class="modal" style="max-width:560px">
+    <h3 id="modalTitle">➕ Add Employee</h3>
+    <input type="hidden" id="empId">
+    <div class="form-row">
+      <div class="form-group">
+        <label>Employee ID *</label>
+        <input class="form-control" id="f_emp_id" placeholder="E001">
+      </div>
+      <div class="form-group">
+        <label>Full Name *</label>
+        <input class="form-control" id="f_name" placeholder="John Doe">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Phone</label>
+        <input class="form-control" id="f_phone" placeholder="9876543210">
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input class="form-control" id="f_email" placeholder="john@company.com">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Department</label>
+        <input class="form-control" id="f_dept" placeholder="Operations">
+      </div>
+      <div class="form-group">
+        <label>Designation</label>
+        <input class="form-control" id="f_desig" placeholder="Manager">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Joining Date</label>
+        <input class="form-control" id="f_join" type="date">
+      </div>
+      <div class="form-group">
+        <label>📍 Location (City / Address)</label>
+        <input class="form-control" id="f_location" placeholder="e.g. Gurugram, Noida, Mumbai...">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>🏢 Emp. Office Setting</label>
+      <select class="form-control" id="f_office_setting">
+        <option value="">-- Select Office Setting --</option>
+        <option value="Head Office Delhi">🏛️ Head Office Delhi</option>
+        <option value="Branch Office Gurgaon">🏬 Branch Office Gurgaon</option>
+        <option value="Client Side">🤝 Client Side</option>
+        <option value="Work From Home">🏠 Work From Home</option>
+        <option value="Field">🚗 Field</option>
+      </select>
+    </div>
+
+    <!-- HEAD SECTION -->
+    <div style="border:1px solid rgba(245,158,11,.25);border-radius:10px;padding:14px;background:rgba(245,158,11,.05);margin-bottom:4px">
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:0">
+        <input type="checkbox" id="f_is_head" style="width:16px;height:16px;accent-color:#f59e0b"
+          onchange="toggleHeadSection()">
+        <span style="font-size:13.5px;font-weight:600;color:#f59e0b">👑 Is Head?</span>
+        <span style="font-size:11px;color:var(--muted)">(Roster assign karne ka right milega)</span>
+        <span id="f_head_badge" style="display:none;font-size:10px;padding:2px 8px;border-radius:10px;
+          background:rgba(245,158,11,.2);color:#f59e0b;border:1px solid rgba(245,158,11,.3);font-weight:700">
+          Already Head ✓
+        </span>
+      </label>
+
+      <div id="headLinkSection" style="display:none;margin-top:12px">
+        <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;display:flex;align-items:center;justify-content:space-between">
+          <span>Link Employees <span style="color:var(--text2)">(jinki roster yeh manage karega)</span></span>
+          <span id="f_link_count" style="color:var(--accent)">0 selected</span>
+        </label>
+        <input class="form-control" id="f_link_search" placeholder="🔍 Search name, dept, ID..."
+          oninput="filterModalEmpList()" style="margin:6px 0 8px">
+        <div id="f_link_list" style="max-height:180px;overflow-y:auto;display:flex;flex-direction:column;gap:3px;
+          border:1px solid var(--border);border-radius:8px;padding:6px;background:rgba(0,0,0,.25);
+          scrollbar-width:thin;scrollbar-color:rgba(0,200,150,.2) transparent">
+          <div style="color:var(--muted);font-size:12px;padding:6px">Loading employees...</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:10px">
+      <button class="btn btn-secondary" onclick="closeEmpModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEmployee()">💾 Save Employee</button>
+    </div>
+  </div>
+</div>
+
+<!-- BULK UPLOAD MODAL -->
+<div class="modal-overlay" id="bulkModal">
+  <div class="modal" style="max-width:520px">
+    <h3>📁 Bulk Upload Employees</h3>
+
+    <!-- Download Format button -->
+    <div style="background:rgba(0,200,150,0.06);border:1px solid rgba(0,200,150,.25);border-radius:10px;padding:14px;margin-bottom:16px">
+      <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:8px">📋 Excel Format</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">
+        <b style="color:var(--accent)">Zaroori:</b> emp_id, name, designation, department<br>
+        <b style="color:var(--text)">Optional:</b> location, office_setting, phone, email, join_date, status, gender<br>
+        <span style="color:#ffb74d;font-size:11px">⚠️ CSV file download hogi — Excel mein open ho jaayegi</span>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="downloadCSV()" style="width:100%">
+        ⬇️ Sample Format Download Karo (CSV)
+      </button>
+    </div>
+
+    <div class="form-group">
+      <label>📂 Apni Excel / CSV File Upload Karo</label>
+      <input class="form-control" id="bulkFile" type="file" accept=".csv,.xlsx,.xls">
+    </div>
+
+    <div id="bulkPreview" style="max-height:180px;overflow-y:auto;margin-bottom:12px"></div>
+    <div id="bulkStatus" style="display:none;font-size:12px;padding:8px 12px;border-radius:8px;margin-bottom:10px"></div>
+
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn btn-secondary" onclick="document.getElementById('bulkModal').classList.remove('open');bulkData=[];">Cancel</button>
+      <button class="btn btn-primary" id="uploadBtn" onclick="uploadBulk()" disabled>
+        ⬆️ Upload & Import
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MAKE HEAD MODAL -->
+<div class="modal-overlay" id="makeHeadModal">
+  <div class="modal" style="max-width:560px">
+    <h3>👑 Head Banao</h3>
+
+    <div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);
+      border-radius:10px;padding:12px 14px;margin-bottom:16px">
+      <div style="font-size:13px;font-weight:600;color:#f59e0b" id="mh_emp_label">—</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:3px" id="mh_emp_sub">—</div>
+    </div>
+
+    <div class="form-group">
+      <label style="display:flex;align-items:center;justify-content:space-between">
+        <span>Employees Link Karo <span style="color:var(--muted);font-weight:400">(jinki roster/attendance manage karega)</span></span>
+        <span style="font-size:11px;color:var(--accent);font-weight:600" id="mh_count">0 selected</span>
+      </label>
+      <input class="form-control" id="mh_search" placeholder="🔍 Name, ID, Dept..."
+        oninput="filterMhList()" style="margin-bottom:8px">
+      <div id="mh_emp_list" style="max-height:260px;overflow-y:auto;
+        border:1px solid var(--border);border-radius:10px;padding:8px;
+        background:rgba(0,0,0,.2);display:flex;flex-direction:column;gap:4px">
+        <div style="color:var(--muted);font-size:12px;padding:8px">Loading...</div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:12px">
+      <button class="btn btn-secondary" onclick="closeModal('makeHeadModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmMakeHead()" style="background:linear-gradient(135deg,#f59e0b,#d97706);box-shadow:0 4px 14px rgba(245,158,11,.3)">
+        👑 Head Bana Do
+      </button>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+let editingId = null;
+let bulkData = [];
+
+// ── Populate filters dynamically from employee data ──
+document.addEventListener('DOMContentLoaded', () => {
+  // Fetch live employee counts
+  fetch('/api/employees/counts').then(r=>r.json()).then(d=>{
+    const tot  = document.getElementById('countTotal');
+    const act  = document.getElementById('countActive');
+    const left = document.getElementById('countLeft');
+    const flt  = document.getElementById('countFiltered');
+    if(tot)  tot.textContent  = d.total;
+    if(act)  act.textContent  = d.active;
+    if(left) left.textContent = d.inactive;
+    if(flt)  flt.textContent  = d.active;
+  }).catch(()=>{});
+  const locations = [...new Set(
+    [...document.querySelectorAll('.emp-card')]
+      .map(c => c.dataset.location).filter(Boolean)
+  )].sort();
+  const locSel = document.getElementById('filterLocation');
+  locations.forEach(l => {
+    const opt = document.createElement('option');
+    opt.value = l; opt.textContent = '📍 ' + l;
+    locSel.appendChild(opt);
+  });
+
+  const officeSettings = [...new Set(
+    [...document.querySelectorAll('.emp-card')]
+      .map(c => c.dataset.office).filter(Boolean)
+  )].sort();
+  const osSel = document.getElementById('filterOfficeSetting');
+  // Clear existing options except first
+  while (osSel.options.length > 1) osSel.remove(1);
+  officeSettings.forEach(o => {
+    const opt = document.createElement('option');
+    opt.value = o; opt.textContent = '🏢 ' + o;
+    osSel.appendChild(opt);
+  });
+});
+
+// ── Open Add Modal ──
+function openAddModal() {
+  editingId = null;
+  document.getElementById('modalTitle').textContent = '➕ Add Employee';
+  document.getElementById('f_emp_id').value = '';
+  document.getElementById('f_emp_id').disabled = false;
+  document.getElementById('f_name').value = '';
+  document.getElementById('f_phone').value = '';
+  document.getElementById('f_email').value = '';
+  document.getElementById('f_dept').value = '';
+  document.getElementById('f_desig').value = '';
+  document.getElementById('f_join').value = '';
+  document.getElementById('f_location').value = '';
+  document.getElementById('f_office_setting').value = '';
+  document.getElementById('empModal').classList.add('open');
+}
+
+// ── Date format converter: any format → YYYY-MM-DD for <input type="date"> ──
+function toInputDate(val) {
+  if (!val || val === 'None' || val === 'null' || val.trim() === '') return '';
+  val = val.trim();
+  // Already YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(val)) return val;
+  // DD-Mon-YYYY  e.g. 01-Jan-2015, 17-Jun-2013
+  const months = {jan:'01',feb:'02',mar:'03',apr:'04',may:'05',jun:'06',
+                  jul:'07',aug:'08',sep:'09',oct:'10',nov:'11',dec:'12'};
+  let m = val.match(/^(\d{1,2})[-\/]([a-zA-Z]{3})[-\/](\d{4})$/);
+  if (m) {
+    const mon = months[m[2].toLowerCase()];
+    return mon ? `${m[3]}-${mon}-${String(m[1]).padStart(2,'0')}` : '';
+  }
+  // DD/MM/YYYY or DD-MM-YYYY
+  m = val.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})$/);
+  if (m) return `${m[3]}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`;
+  // MM/DD/YYYY (US format fallback)
+  m = val.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m) return `${m[3]}-${String(m[1]).padStart(2,'0')}-${String(m[2]).padStart(2,'0')}`;
+  // Try native Date parse as last resort
+  try {
+    const d = new Date(val);
+    if (!isNaN(d.getTime())) return d.toISOString().slice(0, 10);
+  } catch(e) {}
+  return '';
+}
+
+// ── Edit from card (reads individual data-* attributes — no JSON parse needed) ──
+function editEmpFromCard(btn) {
+  const card = btn.closest('.emp-card');
+  const d = card.dataset;
+  editEmp({
+    id:             d.id,
+    emp_id:         d.empid,
+    name:           d.name,
+    phone:          d.phone,
+    email:          d.email,
+    department:     d.dept,
+    designation:    d.desig,
+    join_date:      d.join,
+    location:       d.loc,
+    office_setting: d.os
+  });
+}
+
+// ── Populate edit modal ──
+function editEmp(emp) {
+  editingId = emp.id;
+  document.getElementById('modalTitle').textContent = '✏️ Edit Employee';
+  document.getElementById('f_emp_id').value = emp.emp_id || '';
+  document.getElementById('f_emp_id').disabled = true;
+  document.getElementById('f_name').value = emp.name || '';
+  document.getElementById('f_phone').value = emp.phone || '';
+  document.getElementById('f_email').value = emp.email || '';
+  document.getElementById('f_dept').value = emp.department || '';
+  document.getElementById('f_desig').value = emp.designation || '';
+  document.getElementById('f_join').value = toInputDate(emp.join_date || '');
+  document.getElementById('f_location').value = emp.location || '';
+  document.getElementById('f_office_setting').value = emp.office_setting || '';
+  document.getElementById('empModal').classList.add('open');
+}
+
+// ── Save (add or edit) ──
+async function saveEmployee() {
+  const name = document.getElementById('f_name').value.trim();
+  if (!name) { showToast('Name zaroori hai', 'error'); return; }
+  const data = {
+    emp_id:         document.getElementById('f_emp_id').value.trim(),
+    name:           name,
+    phone:          document.getElementById('f_phone').value.trim(),
+    email:          document.getElementById('f_email').value.trim(),
+    department:     document.getElementById('f_dept').value.trim(),
+    designation:    document.getElementById('f_desig').value.trim(),
+    join_date:      document.getElementById('f_join').value,
+    location:       document.getElementById('f_location').value,
+    office_setting: document.getElementById('f_office_setting').value,
+  };
+  if (!data.emp_id) { showToast('Employee ID zaroori hai', 'error'); return; }
+  const url = editingId ? '/api/employees/edit' : '/api/employees/add';
+  if (editingId) data.id = editingId;
+  const res = await api(url, data);
+  if (res.success) {
+    showToast(editingId ? 'Employee updated! ✅' : 'Employee added! ✅');
+    setTimeout(() => location.reload(), 800);
+  } else {
+    showToast(res.error || 'Error saving', 'error');
+  }
+}
+
+// ── Delete ──
+async function deleteEmp(id, name) {
+  if (!confirm(`"${name}" ko delete karna chahte ho?`)) return;
+  const res = await api('/api/employees/delete', {id});
+  if (res.success) { showToast('Employee removed'); setTimeout(() => location.reload(), 800); }
+}
+
+// ── Close modal ──
+function closeEmpModal() {
+  document.getElementById('empModal').classList.remove('open');
+  document.getElementById('f_emp_id').disabled = false;
+}
+
+// ── Filter ──
+function filterEmployees() {
+  const q   = document.getElementById('searchInput').value.toLowerCase();
+  const os  = document.getElementById('filterOfficeSetting').value.toLowerCase();
+  const loc = document.getElementById('filterLocation').value.toLowerCase();
+  document.querySelectorAll('.emp-card').forEach(c => {
+    const matchQ   = !q   || c.dataset.search.includes(q);
+    const matchOS  = !os  || (c.dataset.os || c.dataset.office || '').toLowerCase() === os;
+    const matchLoc = !loc || (c.dataset.location || '').toLowerCase() === loc;
+    c.style.display = (matchQ && matchOS && matchLoc) ? '' : 'none';
+  });
+}
+
+// ── View toggle ──
+function setView(v) {
+  const grid = document.getElementById('empGrid');
+  if (v === 'list') {
+    grid.style.gridTemplateColumns = '1fr';
+  } else {
+    grid.style.gridTemplateColumns = '';
+  }
+  document.getElementById('gridBtn').classList.toggle('active', v === 'grid');
+  document.getElementById('listBtn').classList.toggle('active', v === 'list');
+}
+
+// ── Bulk Upload ──
+document.getElementById('bulkFile') && document.getElementById('bulkFile').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const wb = XLSX.read(ev.target.result, {type:'binary', cellDates:true});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      // raw:false converts dates to strings
+      bulkData = XLSX.utils.sheet_to_json(ws, {defval:'', raw:false});
+
+      // Remove rows that are just note/example rows (all empty or look like sub-headers)
+      bulkData = bulkData.filter(r => {
+        const vals = Object.values(r).map(v => String(v).trim()).filter(Boolean);
+        return vals.length > 0;
+      });
+
+      const preview = document.getElementById('bulkPreview');
+      const uploadBtn = document.getElementById('uploadBtn');
+
+      if (!bulkData.length) {
+        preview.innerHTML = '<p style="color:#f87171;font-size:12px">⚠️ Koi data nahi mila. Check karo ki Row 1 mein headers hain.</p>';
+        uploadBtn.disabled = true;
+        return;
+      }
+
+      uploadBtn.disabled = false;
+      const keys = Object.keys(bulkData[0]);
+      preview.innerHTML = `
+        <p style="color:var(--accent);font-size:12px;margin-bottom:6px">
+          ✅ <b>${bulkData.length}</b> records mile | Columns: <span style="color:var(--muted)">${keys.join(', ')}</span>
+        </p>
+        <div style="overflow-x:auto">
+        <table style="width:100%;font-size:11px;border-collapse:collapse">
+          <tr>${keys.slice(0,6).map(k => `<th style="padding:4px 8px;background:rgba(0,200,150,.15);color:var(--accent);text-align:left;border:1px solid var(--border)">${k}</th>`).join('')}</tr>
+          ${bulkData.slice(0,3).map(r =>
+            `<tr>${keys.slice(0,6).map(k => `<td style="padding:4px 8px;border:1px solid var(--border);color:var(--muted)">${String(r[k] || '').substring(0,20)}</td>`).join('')}</tr>`
+          ).join('')}
+        </table>
+        </div>`;
+    } catch(err) {
+      document.getElementById('bulkPreview').innerHTML = `<p style="color:#f87171;font-size:12px">❌ File read error: ${err.message}</p>`;
+    }
+  };
+  reader.readAsBinaryString(file);
+});
+
+async function uploadBulk() {
+  if (!bulkData.length) { showToast('Pehle file select karo', 'error'); return; }
+  const btn = document.getElementById('uploadBtn');
+  btn.textContent = '⏳ Importing...';
+  btn.disabled = true;
+
+  const statusEl = document.getElementById('bulkStatus');
+  statusEl.style.display = 'none';
+
+  try {
+    const res = await api('/api/employees/bulk', bulkData);
+    if (res.success) {
+      statusEl.style.display = 'block';
+      statusEl.style.background = 'rgba(0,200,150,.1)';
+      statusEl.style.color = 'var(--accent)';
+      statusEl.innerHTML = `✅ <b>${res.added}</b> employees import ho gaye!
+        ${res.skipped ? ` | ⏭️ ${res.skipped} rows skip` : ''}
+        ${res.errors && res.errors.length ? `<br>⚠️ Errors: ${res.errors.join(', ')}` : ''}`;
+      bulkData = [];
+      setTimeout(() => location.reload(), 1800);
+    } else {
+      statusEl.style.display = 'block';
+      statusEl.style.background = 'rgba(239,68,68,.1)';
+      statusEl.style.color = '#f87171';
+      statusEl.textContent = '❌ ' + (res.error || 'Import failed');
+      btn.disabled = false;
+      btn.textContent = '⬆️ Upload & Import';
+    }
+  } catch(err) {
+    showToast('Network error: ' + err.message, 'error');
+    btn.disabled = false;
+    btn.textContent = '⬆️ Upload & Import';
+  }
+}
+
+
+// ── Download CSV — pure JS, no library, no server, no block ──
+function downloadCSV() {
+  const rows = [
+    ['emp_id','name','designation','department','location','office_setting','phone','email','join_date','status','gender'],
+    ['5816','Sumit Kumar Mallick','DGM - Payroll & Benefits','Payroll','Gurugram Sector 44','Head Office Delhi','9876543210','sumit@easysource.in','01-Jan-2015','active','M'],
+    ['0701','Prithvi Raj Chauhan','GM - Payroll & Benefits','Payroll','Gurugram Sector 18','Head Office Delhi','9871234567','prithvi@easysource.in','21-Sep-2009','active','M'],
+    ['3534','Ranjay Kumar','Senior Manager - MIS','MIS','Gurugram','Head Office Delhi','9812345678','ranjay@easysource.in','01-Jul-2013','active','M'],
+    ['3462','Dheeraj Mani Tripathi','DGM - Finance & Accounts','Finance & Accounts','Gurugram','Head Office Delhi','9873699560','dheeraj@easysource.in','17-Jun-2013','active','M'],
+    ['52108','Abhishek Panday','Executive - Client Services','Operations','Delhi','Client Side','9878901234','abhishek@easysource.in','01-Dec-2023','active','M'],
+  ];
+  // Build CSV string
+  const csv = rows.map(r => r.map(v => '"' + String(v).replace(/"/g,'""') + '"').join(',')).join('\r\n');
+  // Create blob and trigger download
+  const blob = new Blob(['﻿' + csv], {type: 'text/csv;charset=utf-8;'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = 'HRMS_Employee_Import_Format.csv';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
+  showToast('✅ CSV download ho gaya! Excel mein kholo.');
+}
+
+
+// ══════════════════════════
+// MAKE HEAD — from Employee Card
+// ══════════════════════════
+let mhEmpId = '', mhAllEmps = [], mhSelected = new Set();
+
+async function openMakeHead(empId, empName, empDept) {
+  mhEmpId = empId;
+  mhSelected = new Set();
+  document.getElementById('mh_emp_label').textContent = '👑 ' + empName;
+  document.getElementById('mh_emp_sub').textContent = 'ID: ' + empId + (empDept ? '  ·  ' + empDept : '');
+  document.getElementById('mh_search').value = '';
+  document.getElementById('mh_count').textContent = '0 selected';
+
+  // Load all employees for linking
+  try {
+    const res = await fetch('/api/employees');
+    mhAllEmps = await res.json();
+  } catch(e) { mhAllEmps = []; }
+
+  renderMhList();
+  document.getElementById('makeHeadModal').classList.add('open');
+}
+
+function renderMhList() {
+  const q = document.getElementById('mh_search').value.toLowerCase();
+  const el = document.getElementById('mh_emp_list');
+  const filtered = mhAllEmps.filter(e =>
+    e.emp_id !== mhEmpId &&
+    (!q || e.name.toLowerCase().includes(q) ||
+           e.emp_id.toLowerCase().includes(q) ||
+           (e.department||'').toLowerCase().includes(q))
+  );
+  if (!filtered.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:8px;text-align:center">Koi employee nahi mila</div>';
+    return;
+  }
+  el.innerHTML = filtered.map(e => {
+    const chk = mhSelected.has(e.emp_id);
+    return `<label style="display:flex;align-items:center;gap:10px;padding:8px 10px;
+      border-radius:8px;cursor:pointer;transition:background .12s;
+      background:${chk ? 'rgba(0,200,150,.1)' : 'transparent'}"
+      onmouseover="if(!${chk})this.style.background='rgba(255,255,255,.04)'"
+      onmouseout="this.style.background='${chk ? 'rgba(0,200,150,.1)' : 'transparent'}'">
+      <input type="checkbox" ${chk ? 'checked' : ''}
+        style="accent-color:var(--accent);width:15px;height:15px;flex-shrink:0"
+        onchange="toggleMh('${e.emp_id}', this.checked, this.closest('label'))">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;color:var(--text)">${e.name}</div>
+        <div style="font-size:11px;color:var(--muted)">${e.emp_id} · ${e.department || '—'}</div>
+      </div>
+    </label>`;
+  }).join('');
+}
+
+function filterMhList() { renderMhList(); }
+
+function toggleMh(empId, checked, label) {
+  if (checked) { mhSelected.add(empId); label.style.background = 'rgba(0,200,150,.1)'; }
+  else { mhSelected.delete(empId); label.style.background = 'transparent'; }
+  document.getElementById('mh_count').textContent = mhSelected.size + ' selected';
+}
+
+async function confirmMakeHead() {
+  if (!mhEmpId) return;
+  const btn = document.querySelector('#makeHeadModal .btn-primary');
+  btn.innerHTML = '⏳ Creating...'; btn.disabled = true;
+
+  const res = await api('/api/heads/create', {
+    emp_id: mhEmpId,
+    linked_emp_ids: [...mhSelected]
+  });
+
+  btn.innerHTML = '👑 Head Bana Do'; btn.disabled = false;
+
+  if (res.success) {
+    showToast(res.message || '✅ Head ban gaya!');
+    closeModal('makeHeadModal');
+    // Reload to update badge
+    setTimeout(() => location.reload(), 800);
+  } else {
+    showToast(res.error || 'Error creating head', 'error');
+  }
+}
+</script>
+{% endblock %}

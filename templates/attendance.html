@@ -1,0 +1,405 @@
+{% extends "base.html" %}
+{% block title %}Attendance – HRMS{% endblock %}
+{% block page_title %}Attendance{% endblock %}
+{% block breadcrumb %}Daily Attendance{% endblock %}
+
+{% block extra_style %}
+.att-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.att-stat-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.att-stat{background:rgba(15,20,35,.85);border:1px solid var(--border);border-radius:10px;padding:12px 18px;text-align:center;min-width:80px}
+.att-stat .num{font-size:24px;font-weight:800;font-family:'JetBrains Mono',monospace;line-height:1}
+.att-stat .lbl{font-size:10px;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:.07em}
+.att-grid{display:flex;flex-direction:column;gap:7px;max-height:calc(100vh - 320px);overflow-y:auto;padding-right:4px;scrollbar-width:thin;scrollbar-color:rgba(0,200,150,.2) transparent}
+.att-row{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:12px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:12px 14px;transition:border-color .15s}
+.att-row.marked-P{border-color:rgba(76,175,80,.4);background:rgba(76,175,80,.04)}
+.att-row.marked-A{border-color:rgba(244,67,54,.4);background:rgba(244,67,54,.04)}
+.att-row.marked-OD{border-color:rgba(255,152,0,.4);background:rgba(255,152,0,.04)}
+.att-row.marked-L{border-color:rgba(124,58,237,.4);background:rgba(124,58,237,.04)}
+.att-row.marked-WFH{border-color:rgba(165,180,252,.4);background:rgba(165,180,252,.04)}
+.emp-name{font-size:13.5px;font-weight:600}
+.emp-meta{font-size:11px;color:var(--muted);margin-top:2px}
+.att-btns{display:flex;gap:5px;flex-wrap:wrap}
+.att-btn{padding:6px 11px;border-radius:7px;border:1px solid;font-family:inherit;font-size:11.5px;font-weight:700;cursor:pointer;transition:all .15s;letter-spacing:.03em}
+.att-btn.P{border-color:rgba(76,175,80,.4);color:#69db7c;background:rgba(76,175,80,.08)}
+.att-btn.A{border-color:rgba(244,67,54,.4);color:#ff6b6b;background:rgba(244,67,54,.08)}
+.att-btn.OD{border-color:rgba(255,152,0,.4);color:#ffb74d;background:rgba(255,152,0,.08)}
+.att-btn.L{border-color:rgba(124,58,237,.4);color:#c4b5fd;background:rgba(124,58,237,.08)}
+.att-btn.WFH{border-color:rgba(165,180,252,.4);color:#a5b4fc;background:rgba(165,180,252,.08)}
+.att-btn.active-P{background:rgba(76,175,80,.25);border-color:#69db7c;transform:scale(1.07)}
+.att-btn.active-A{background:rgba(244,67,54,.25);border-color:#ff6b6b;transform:scale(1.07)}
+.att-btn.active-OD{background:rgba(255,152,0,.25);border-color:#ffb74d;transform:scale(1.07)}
+.att-btn.active-L{background:rgba(124,58,237,.25);border-color:#c4b5fd;transform:scale(1.07)}
+.att-btn.active-WFH{background:rgba(165,180,252,.25);border-color:#a5b4fc;transform:scale(1.07)}
+.remark-input{width:100px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;padding:6px 9px;color:var(--text);font-family:inherit;font-size:12px;outline:none}
+/* Emp detail drawer */
+.emp-drawer{background:rgba(15,20,35,.95);border:1px solid var(--border);border-radius:12px;padding:18px;margin-top:16px;display:none}
+.emp-drawer.open{display:block}
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <!-- TOOLBAR -->
+  <div class="att-toolbar">
+    <div style="display:flex;flex-direction:column;gap:3px">
+      <label style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em">Date</label>
+      <input type="date" id="attDate" class="form-control" style="width:160px" onchange="loadAttendance()">
+    </div>
+    <div style="display:flex;flex-direction:column;gap:3px">
+      <label style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em">Office Setting</label>
+      <select class="form-control" id="officeFilter" style="width:200px" onchange="applyFilter()">
+        <option value="">All Offices</option>
+        <option>Head Office Delhi</option>
+        <option>Branch Office Gurgaon</option>
+        <option>Client Side</option>
+        <option>Work From Home</option>
+        <option>Field</option>
+      </select>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:3px">
+      <label style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em">Search</label>
+      <input type="text" class="form-control" id="attSearch" placeholder="🔍 Name / ID / Dept..."
+        style="width:200px" oninput="applyFilter()">
+    </div>
+    <div style="margin-top:18px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-success btn-sm" onclick="markAll('P')">✅ All Present</button>
+      <button class="btn btn-secondary btn-sm" onclick="saveBulk()">💾 Save All</button>
+      <button class="btn btn-info btn-sm" onclick="openBulkUpload()">📤 Bulk Upload</button>
+      <button class="btn btn-warning btn-sm" onclick="openEmpHistory()">📋 Emp History</button>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="att-stat-row">
+    <div class="att-stat"><div class="num" id="cTotal" style="color:var(--accent)">0</div><div class="lbl">Total</div></div>
+    <div class="att-stat"><div class="num" id="cP" style="color:#69db7c">0</div><div class="lbl">Present</div></div>
+    <div class="att-stat"><div class="num" id="cA" style="color:#ff6b6b">0</div><div class="lbl">Absent</div></div>
+    <div class="att-stat"><div class="num" id="cOD" style="color:#ffb74d">0</div><div class="lbl">OD</div></div>
+    <div class="att-stat"><div class="num" id="cL" style="color:#c4b5fd">0</div><div class="lbl">Leave</div></div>
+    <div class="att-stat"><div class="num" id="cWFH" style="color:#a5b4fc">0</div><div class="lbl">WFH</div></div>
+    <div class="att-stat"><div class="num" id="cUnmarked" style="color:var(--muted)">0</div><div class="lbl">Unmarked</div></div>
+    <div class="att-stat" style="margin-left:auto"><div class="num" id="cPct" style="color:var(--accent)">0%</div><div class="lbl">Attendance</div></div>
+  </div>
+
+  <!-- ATTENDANCE GRID -->
+  <div class="att-grid" id="attGrid">
+    {% for emp in employees %}
+    <div class="att-row" id="row-{{ emp.emp_id }}" data-emp-id="{{ emp.emp_id }}"
+      data-office="{{ emp.office_setting or '' }}" data-name="{{ emp.name|lower }}"
+      data-dept="{{ emp.department|lower if emp.department else '' }}">
+      <div>
+        <div class="emp-name">{{ emp.name }}</div>
+        <div class="emp-meta">{{ emp.emp_id }} · {{ emp.department or '' }}{% if emp.office_setting %} · <span style="color:var(--accent)">{{ emp.office_setting }}</span>{% endif %}</div>
+      </div>
+      <div class="att-btns">
+        <button class="att-btn P"   onclick="markAtt('{{ emp.emp_id }}','P')">P</button>
+        <button class="att-btn A"   onclick="markAtt('{{ emp.emp_id }}','A')">A</button>
+        <button class="att-btn OD"  onclick="markAtt('{{ emp.emp_id }}','OD')">OD</button>
+        <button class="att-btn L"   onclick="markAtt('{{ emp.emp_id }}','L')">L</button>
+        <button class="att-btn WFH" onclick="markAtt('{{ emp.emp_id }}','WFH')">WFH</button>
+      </div>
+      <input class="remark-input" id="remark-{{ emp.emp_id }}" placeholder="Remark">
+    </div>
+    {% else %}
+    <p style="text-align:center;color:var(--muted);padding:40px">No employees found.</p>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- BULK UPLOAD MODAL -->
+<div class="modal-overlay" id="bulkAttModal">
+  <div class="modal" style="max-width:580px">
+    <h3>📤 Bulk Attendance Upload</h3>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:14px">
+      CSV format: <code style="background:rgba(0,200,150,.1);padding:2px 7px;border-radius:4px;color:var(--accent)">emp_id,status,remark</code>
+      &nbsp; Status: P, A, OD, L, WFH
+    </div>
+    <div class="form-group">
+      <label>Date</label>
+      <input type="date" class="form-control" id="bulkAttDate">
+    </div>
+    <div class="form-group">
+      <label>CSV File</label>
+      <input type="file" class="form-control" id="bulkAttFile" accept=".csv">
+    </div>
+    <div id="bulkAttPreview" style="max-height:200px;overflow-y:auto;margin-bottom:12px;display:none;
+      border:1px solid var(--border);border-radius:8px;padding:10px;font-size:12px;background:rgba(0,0,0,.2)"></div>
+    <div style="display:flex;gap:10px;justify-content:space-between">
+      <button class="btn btn-secondary btn-sm" onclick="downloadBulkTemplate()">⬇️ Sample CSV</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-secondary" onclick="closeModal('bulkAttModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitBulkAtt()">📤 Upload</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EMP HISTORY MODAL -->
+<div class="modal-overlay" id="empHistoryModal">
+  <div class="modal" style="max-width:680px">
+    <h3>📋 Employee Attendance History</h3>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+      <div class="form-group" style="margin:0;flex:1">
+        <label>Employee</label>
+        <select class="form-control" id="histEmpId">
+          <option value="">-- Select Employee --</option>
+          {% for emp in employees %}
+          <option value="{{ emp.emp_id }}">{{ emp.emp_id }} – {{ emp.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group" style="margin:0">
+        <label>From Date</label>
+        <input type="date" class="form-control" id="histFrom" style="width:150px">
+      </div>
+      <div class="form-group" style="margin:0">
+        <label>To Date</label>
+        <input type="date" class="form-control" id="histTo" style="width:150px">
+      </div>
+      <div style="display:flex;align-items:flex-end">
+        <button class="btn btn-primary btn-sm" onclick="loadEmpHistory()">🔍 View</button>
+      </div>
+    </div>
+    <!-- Summary chips -->
+    <div id="histSummary" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px"></div>
+    <!-- Table -->
+    <div style="max-height:320px;overflow-y:auto;border:1px solid var(--border);border-radius:8px">
+      <table>
+        <thead><tr>
+          <th>Date</th><th>Status</th><th>Remark</th><th>Marked By</th>
+        </tr></thead>
+        <tbody id="histBody">
+          <tr><td colspan="4" style="text-align:center;color:var(--muted);padding:24px">Employee aur date range select karo</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-top:12px">
+      <button class="btn btn-secondary" onclick="closeModal('empHistoryModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const today = new Date().toISOString().slice(0,10);
+document.getElementById('attDate').value = today;
+// Default history range: current month
+const y=today.slice(0,4), m=today.slice(5,7);
+document.getElementById('histFrom').value = `${y}-${m}-01`;
+document.getElementById('histTo').value   = today;
+
+let statusMap = {};
+
+async function loadAttendance() {
+  const date = document.getElementById('attDate').value;
+  const records = await api('/api/attendance/get', {date});
+  statusMap = {};
+  document.querySelectorAll('.att-row').forEach(row => {
+    row.className = 'att-row';
+    row.querySelectorAll('.att-btn').forEach(b => b.className = `att-btn ${b.textContent.trim()}`);
+  });
+  records.forEach(r => {
+    statusMap[r.emp_id] = r.status;
+    const row = document.getElementById('row-' + r.emp_id);
+    if(row) {
+      row.className = `att-row marked-${r.status}`;
+      row.querySelectorAll('.att-btn').forEach(b => {
+        const s = b.textContent.trim();
+        b.className = s === r.status ? `att-btn active-${s}` : `att-btn ${s}`;
+      });
+    }
+    const rem = document.getElementById('remark-' + r.emp_id);
+    if(rem) rem.value = r.remark || '';
+  });
+  updateCounts();
+}
+
+function markAtt(empId, status) {
+  // Toggle off if same status clicked again
+  if(statusMap[empId] === status) {
+    delete statusMap[empId];
+    const row = document.getElementById('row-' + empId);
+    row.className = 'att-row';
+    row.querySelectorAll('.att-btn').forEach(b => b.className = `att-btn ${b.textContent.trim()}`);
+  } else {
+    statusMap[empId] = status;
+    const row = document.getElementById('row-' + empId);
+    row.className = `att-row marked-${status}`;
+    row.querySelectorAll('.att-btn').forEach(b => {
+      const s = b.textContent.trim();
+      b.className = s === status ? `att-btn active-${s}` : `att-btn ${s}`;
+    });
+  }
+  updateCounts();
+}
+
+function updateCounts() {
+  const rows = document.querySelectorAll('.att-row:not([style*="none"])');
+  let P=0, A=0, OD=0, L=0, WFH=0, total=0;
+  rows.forEach(row => {
+    if(row.style.display === 'none') return;
+    total++;
+    const empId = row.dataset.empId;
+    const s = statusMap[empId];
+    if(s==='P') P++; else if(s==='A') A++;
+    else if(s==='OD') OD++; else if(s==='L') L++;
+    else if(s==='WFH') WFH++;
+  });
+  const marked = P+A+OD+L+WFH;
+  document.getElementById('cTotal').textContent    = total;
+  document.getElementById('cP').textContent        = P;
+  document.getElementById('cA').textContent        = A;
+  document.getElementById('cOD').textContent       = OD;
+  document.getElementById('cL').textContent        = L;
+  document.getElementById('cWFH').textContent      = WFH;
+  document.getElementById('cUnmarked').textContent = total - marked;
+  document.getElementById('cPct').textContent      = total ? Math.round(P/total*100)+'%' : '0%';
+}
+
+function applyFilter() {
+  const office = document.getElementById('officeFilter').value.toLowerCase();
+  const q      = document.getElementById('attSearch').value.toLowerCase();
+  document.querySelectorAll('.att-row').forEach(row => {
+    const matchOffice = !office || (row.dataset.office||'').toLowerCase() === office;
+    const matchSearch = !q ||
+      (row.dataset.name||'').includes(q) ||
+      (row.dataset.dept||'').includes(q) ||
+      (row.dataset.empId||'').toLowerCase().includes(q);
+    row.style.display = (matchOffice && matchSearch) ? '' : 'none';
+  });
+  updateCounts();
+}
+
+function markAll(status) {
+  document.querySelectorAll('.att-row').forEach(row => {
+    if(row.style.display !== 'none') markAtt(row.dataset.empId, status);
+  });
+}
+
+async function saveBulk() {
+  const date = document.getElementById('attDate').value;
+  const records = Object.entries(statusMap).map(([emp_id, status]) => ({
+    emp_id, status, remark: (document.getElementById('remark-'+emp_id)||{}).value || ''
+  }));
+  if(!records.length){ showToast('Kuch mark karo pehle', 'error'); return; }
+  const btn = event.target;
+  btn.innerHTML = '⏳ Saving...'; btn.disabled = true;
+  const res = await api('/api/attendance/bulk', {date, records});
+  btn.innerHTML = '💾 Save All'; btn.disabled = false;
+  if(res.success) showToast(`✅ ${records.length} records save ho gaye!`);
+  else showToast('Error saving', 'error');
+}
+
+// Auto-save on remark blur
+document.querySelectorAll('.att-row').forEach(row => {
+  const empId = row.dataset.empId;
+  const rem = document.getElementById('remark-' + empId);
+  if(rem) rem.addEventListener('blur', async () => {
+    if(statusMap[empId]) {
+      await api('/api/attendance/mark', {
+        emp_id: empId, date: document.getElementById('attDate').value,
+        status: statusMap[empId], remark: rem.value
+      });
+    }
+  });
+});
+
+// ── BULK UPLOAD ──
+function openBulkUpload() {
+  document.getElementById('bulkAttDate').value = document.getElementById('attDate').value;
+  document.getElementById('bulkAttPreview').style.display = 'none';
+  document.getElementById('bulkAttModal').classList.add('open');
+}
+
+document.getElementById('bulkAttFile').addEventListener('change', function() {
+  const file = this.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const lines = e.target.result.split('\n').filter(l => l.trim());
+    const preview = document.getElementById('bulkAttPreview');
+    preview.style.display = 'block';
+    preview.innerHTML = `<div style="color:var(--accent);margin-bottom:6px;font-weight:600">${lines.length-1} records found:</div>` +
+      lines.slice(0, 8).map((l,i) => `<div style="color:${i===0?'var(--muted)':'var(--text)'}; font-family:monospace">${l}</div>`).join('') +
+      (lines.length > 8 ? `<div style="color:var(--muted)">...+${lines.length-8} more</div>` : '');
+  };
+  reader.readAsText(file);
+});
+
+async function submitBulkAtt() {
+  const file = document.getElementById('bulkAttFile').files[0];
+  const date = document.getElementById('bulkAttDate').value;
+  if(!file || !date){ showToast('File aur date select karo', 'error'); return; }
+  const text = await file.text();
+  const lines = text.split('\n').filter(l => l.trim());
+  const records = [];
+  for(let i=1; i<lines.length; i++) {
+    const parts = lines[i].split(',');
+    if(parts[0] && parts[1]) records.push({
+      emp_id: parts[0].trim().replace(/"/g,''),
+      status: parts[1].trim().replace(/"/g,'').toUpperCase(),
+      remark: (parts[2]||'').trim().replace(/"/g,'')
+    });
+  }
+  if(!records.length){ showToast('Koi valid records nahi', 'error'); return; }
+  const res = await api('/api/attendance/bulk', {date, records});
+  if(res.success) {
+    showToast(`✅ ${records.length} records upload ho gaye!`);
+    closeModal('bulkAttModal');
+    loadAttendance();
+  } else showToast('Error: ' + (res.error||'Failed'), 'error');
+}
+
+function downloadBulkTemplate() {
+  const rows = [['emp_id','status','remark'],['5816','P','On time'],['0701','A','Sick leave'],['3534','OD','Client visit'],['3462','L','Annual leave'],['52108','WFH','']];
+  const csv = rows.map(r => r.map(v=>`"${v}"`).join(',')).join('\r\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = 'Attendance_Bulk_Format.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  showToast('✅ Template download ho gaya!');
+}
+
+// ── EMP HISTORY ──
+function openEmpHistory() {
+  document.getElementById('empHistoryModal').classList.add('open');
+}
+
+async function loadEmpHistory() {
+  const empId = document.getElementById('histEmpId').value;
+  const from  = document.getElementById('histFrom').value;
+  const to    = document.getElementById('histTo').value;
+  if(!empId){ showToast('Employee select karo', 'error'); return; }
+  if(!from || !to){ showToast('Date range select karo', 'error'); return; }
+
+  const records = await api('/api/attendance/emp-history', {emp_id: empId, from_date: from, to_date: to});
+
+  // Summary chips
+  const counts = {P:0, A:0, OD:0, L:0, WFH:0};
+  records.forEach(r => counts[r.status] = (counts[r.status]||0)+1);
+  const chipColors = {P:'#69db7c', A:'#ff6b6b', OD:'#ffb74d', L:'#c4b5fd', WFH:'#a5b4fc'};
+  const chipBg = {P:'rgba(76,175,80,.15)', A:'rgba(244,67,54,.15)', OD:'rgba(255,152,0,.15)', L:'rgba(124,58,237,.15)', WFH:'rgba(165,180,252,.15)'};
+  const lblMap = {P:'Present', A:'Absent', OD:'On Duty', L:'Leave', WFH:'WFH'};
+  document.getElementById('histSummary').innerHTML =
+    Object.entries(counts).filter(([,v])=>v>0).map(([k,v]) =>
+      `<span style="padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;background:${chipBg[k]};color:${chipColors[k]}">${lblMap[k]}: ${v}</span>`
+    ).join('') + `<span style="padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;background:rgba(0,200,150,.1);color:var(--accent)">Total: ${records.length} days</span>`;
+
+  const stCls = {P:'present', A:'absent', OD:'od', L:'leave', WFH:'wo'};
+  const tbody = document.getElementById('histBody');
+  if(!records.length) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px">Koi records nahi</td></tr>';
+    return;
+  }
+  tbody.innerHTML = records.map(r => `<tr>
+    <td style="font-family:'JetBrains Mono',monospace;font-size:12px">${r.date}</td>
+    <td><span class="badge badge-${stCls[r.status]||'wo'}">${r.status}</span></td>
+    <td style="color:var(--muted)">${r.remark||'—'}</td>
+    <td style="color:var(--muted);font-size:11px">${r.marked_by||'—'}</td>
+  </tr>`).join('');
+}
+
+loadAttendance();
+</script>
+{% endblock %}

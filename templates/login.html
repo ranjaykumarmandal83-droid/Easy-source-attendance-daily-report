@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login – EasySource HRMS</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#060912;--accent:#00c896;--accent2:#3d5afe;--text:#e8edf5;--muted:#55607a}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+.orb{position:fixed;border-radius:50%;filter:blur(75px);pointer-events:none;animation:drift 10s ease-in-out infinite}
+.o1{width:520px;height:520px;background:radial-gradient(circle,rgba(0,200,150,.11),transparent 70%);top:-120px;left:-120px}
+.o2{width:400px;height:400px;background:radial-gradient(circle,rgba(61,90,254,.11),transparent 70%);bottom:-90px;right:-90px;animation-delay:-3.5s}
+.o3{width:300px;height:300px;background:radial-gradient(circle,rgba(124,58,237,.07),transparent 70%);top:42%;left:42%;animation-delay:-6s}
+@keyframes drift{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-26px) scale(1.04)}}
+.grid{position:fixed;inset:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.02) 1px,transparent 1px);background-size:50px 50px}
+.wrap{position:relative;z-index:10;width:100%;max-width:410px;padding:20px}
+.box{background:rgba(12,18,35,.9);backdrop-filter:blur(22px);border:1px solid rgba(255,255,255,.1);border-radius:22px;padding:38px 34px 34px;box-shadow:0 36px 80px rgba(0,0,0,.52);position:relative}
+.box::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:200px;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:.65}
+.logo{text-align:center;margin-bottom:32px}
+.logo-inner{display:inline-flex;align-items:center;gap:13px;margin-bottom:8px}
+.bars{display:flex;align-items:flex-end;gap:4px}
+.bc{display:flex;flex-direction:column;gap:3px}
+.b{width:10px;height:10px;border-radius:2.5px}
+.wordmark{text-align:left;line-height:1.05}
+.wl{font-size:25px;font-weight:900;color:#fff;letter-spacing:-.01em}
+.sub{font-size:12px;color:var(--muted);letter-spacing:.04em}
+.err{display:none;background:rgba(244,67,54,.1);border:1px solid rgba(244,67,54,.28);border-radius:9px;padding:10px 14px;color:#ff6b6b;font-size:12.5px;text-align:center;margin-bottom:14px;align-items:center;justify-content:center;gap:7px}
+.err.show{display:flex}
+.field{position:relative;margin-bottom:13px}
+.fi{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;transition:color .22s;pointer-events:none}
+.inp{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:11px;padding:13px 13px 13px 44px;color:var(--text);font-family:'Outfit',sans-serif;font-size:14px;font-weight:500;outline:none;transition:all .22s}
+.inp:focus{border-color:var(--accent);background:rgba(0,200,150,.045);box-shadow:0 0 0 3px rgba(0,200,150,.11)}
+.inp::placeholder{color:var(--muted);font-weight:400}
+.eye{position:absolute;right:13px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;padding:4px;transition:color .2s}
+.eye:hover{color:#94a3b8}
+.sbtn{width:100%;padding:14px;margin-top:7px;background:linear-gradient(135deg,var(--accent),#00a87a);border:none;border-radius:11px;color:#060912;font-family:'Outfit',sans-serif;font-size:14.5px;font-weight:800;cursor:pointer;transition:all .22s;box-shadow:0 7px 22px rgba(0,200,150,.3);letter-spacing:.01em}
+.sbtn:hover{box-shadow:0 10px 30px rgba(0,200,150,.44);transform:translateY(-1px)}
+.hint{margin-top:18px;padding:13px 15px;background:rgba(255,255,255,.027);border:1px solid rgba(255,255,255,.07);border-radius:11px;font-size:12px;color:var(--muted);text-align:center;line-height:1.85}
+.hint code{font-family:'JetBrains Mono',monospace;color:rgba(255,255,255,.52);font-size:11.5px;background:rgba(255,255,255,.06);padding:1px 6px;border-radius:4px}
+.foot{text-align:center;margin-top:16px;font-size:10.5px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div>
+<div class="grid"></div>
+<div class="wrap">
+  <div class="box">
+    <div class="logo">
+      <div class="logo-inner">
+        <div class="bars">
+          <div class="bc"><div class="b" style="background:#e53935"></div></div>
+          <div class="bc"><div class="b" style="background:#f9a825"></div><div class="b" style="background:#f9a825"></div></div>
+          <div class="bc"><div class="b" style="background:#43a047"></div><div class="b" style="background:#43a047"></div><div class="b" style="background:#43a047"></div></div>
+          <div class="bc"><div class="b" style="background:#1e88e5"></div><div class="b" style="background:#1e88e5"></div><div class="b" style="background:#1e88e5"></div><div class="b" style="background:#1e88e5"></div></div>
+        </div>
+        <div class="wordmark"><div class="wl">EASY</div><div class="wl">SOURCE</div></div>
+      </div>
+      <div class="sub">workforce digitized</div>
+    </div>
+    {% if error %}<div class="err show"><i class="fas fa-exclamation-circle"></i>{{ error }}</div>{% endif %}
+    <form method="POST" action="/login">
+      <div class="field"><input class="inp" type="text" name="username" placeholder="Employee ID / Username"
+        autocomplete="username"
+        autocapitalize="none"
+        autocorrect="off"
+        spellcheck="false"
+        inputmode="text"
+        required><i class="fas fa-user fi"></i></div>
+      <div class="field"><input class="inp" type="password" name="password" id="pw" placeholder="Password (default: Employee ID)"
+        autocomplete="current-password"
+        autocapitalize="none"
+        autocorrect="off"
+        spellcheck="false"
+        required><i class="fas fa-lock fi"></i><button class="eye" type="button" onclick="togglePw()"><i class="fas fa-eye" id="ei"></i></button></div>
+      <button class="sbtn" type="submit">Sign In &nbsp;→</button>
+    </form>
+    <div style="text-align:center;margin-top:14px">
+      <a href="/forgot-password" style="color:var(--muted);font-size:12px;text-decoration:none" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--muted)'">
+        🔐 Password bhool gaye? Reset karo
+      </a>
+    </div>
+    <div class="hint">Default: <code>admin</code> / <code>admin123</code><br>Password Settings mein badlein</div>
+  </div>
+  <div class="foot">EasySource HRMS Enterprise · workforce digitized</div>
+</div>
+<script>
+function togglePw(){const p=document.getElementById('pw'),e=document.getElementById('ei');if(p.type==='password'){p.type='text';e.className='fas fa-eye-slash'}else{p.type='password';e.className='fas fa-eye'}}
+</script>
+</body>
+</html>

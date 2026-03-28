@@ -1,0 +1,22 @@
+# SIDEBAR PATCH INSTRUCTIONS
+# "Weekly Roster" → "Roster Management" with hover dropdown
+
+## KYA CHANGE HOGA:
+- Sidebar mein "Weekly Roster" → "Roster Management"
+- Mouse hover karne par dropdown dikhega:
+  • 📅 Roster Management
+  • 📋 Roster Rules Template  
+  • 👥 Employee Mapping
+- Kisi bhi item par click karne par seedha us section ka page khulega
+- Active tab highlight hoga automatically
+
+## KAISE APPLY KARE:
+Run this command in your HRMS folder:
+    python3 apply_sidebar_patch.py
+
+## YA MANUALLY:
+1. base.html kholein
+2. "Weekly Roster" wali <li> line dhundein
+3. BASE_HTML_SIDEBAR_PATCH.html ka STEP 1 section se replace karein
+4. </style> se pehle STEP 2 (CSS) add karein
+5. </body> se pehle STEP 3 (JS) add karein
