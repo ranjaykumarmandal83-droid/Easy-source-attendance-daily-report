@@ -2,10 +2,11 @@
   "name": "EasySource HRMS",
   "short_name": "HRMS",
   "description": "Employee Attendance & HR Management",
-  "start_url": "/mobile",
+  "start_url": "/app",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#0a0e1a",
-  "theme_color": "#00d4aa",
+  "theme_color": "#00c896",
   "orientation": "portrait",
   "icons": [
     {
@@ -19,6 +20,18 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Attendance Mark Karo",
+      "url": "/app?tab=mark",
+      "icons": [{"src": "/static/icon-192.png", "sizes": "192x192"}]
+    },
+    {
+      "name": "My History",
+      "url": "/app?tab=history",
+      "icons": [{"src": "/static/icon-192.png", "sizes": "192x192"}]
     }
   ],
   "categories": ["business", "productivity"],

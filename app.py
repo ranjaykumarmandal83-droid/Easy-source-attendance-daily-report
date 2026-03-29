@@ -2566,6 +2566,10 @@ def profile():
 def mobile():
     return render_template('mobile_attendance.html')
 
+@app.route('/app')
+def app_mobile():
+    return render_template('app_mobile.html')
+
 @app.route('/api/me')
 def api_me():
     if 'user_id' not in session:
@@ -2792,6 +2796,12 @@ def api_roster_apply_pattern():
     return jsonify({'success': True, 'saved': saved, 'skipped': skipped,
                     'first_sat': first_sat.strftime('%d %b'), 'last_sat': last_sat.strftime('%d %b')})
 
+
+@app.route('/process-chart')
+@app.route('/processchart')
+@login_required
+def process_chart():
+    return render_template('process_chart.html')
 
 if __name__ == '__main__':
     os.makedirs('database', exist_ok=True)

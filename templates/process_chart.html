@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EasySource HRMS — Process Chart</title>
+<style>
+:root {
+  --bg: #0d1117; --card: #161b27; --card2: #1c2333;
+  --border: rgba(255,255,255,.08); --accent: #00c896;
+  --blue: #3d8bfd; --orange: #fd7e14; --purple: #a855f7;
+  --red: #ef4444; --yellow: #fbbf24; --text: #e6edf3; --muted: #8b949e;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: Arial, sans-serif; padding: 24px; }
+
+h1 { text-align: center; font-size: 22px; color: var(--accent); margin-bottom: 6px; }
+.subtitle { text-align: center; color: var(--muted); font-size: 13px; margin-bottom: 32px; }
+
+/* ── Grid layout ── */
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; max-width: 1100px; margin: 0 auto; }
+@media(max-width:800px){ .grid { grid-template-columns: 1fr; } }
+
+/* ── Flow card ── */
+.flow { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 18px; }
+.flow-title {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 14px; font-weight: 700; margin-bottom: 16px;
+  padding-bottom: 10px; border-bottom: 1px solid var(--border);
+}
+.flow-title .icon { font-size: 18px; }
+
+/* ── Steps ── */
+.step {
+  display: flex; align-items: flex-start; gap: 10px;
+  margin-bottom: 10px; position: relative;
+}
+.step:not(:last-child)::after {
+  content: ''; position: absolute; left: 14px; top: 28px;
+  width: 2px; height: calc(100% - 8px);
+  background: var(--border);
+}
+.step-num {
+  min-width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; z-index: 1;
+}
+.step-body { flex: 1; padding-top: 3px; }
+.step-name { font-size: 13px; font-weight: 600; line-height: 1.3; }
+.step-desc { font-size: 11px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+
+/* ── Decision box ── */
+.decision {
+  background: rgba(251,191,36,.07); border: 1px solid rgba(251,191,36,.25);
+  border-radius: 8px; padding: 8px 12px; margin: 8px 0;
+  font-size: 12px; color: var(--yellow); text-align: center;
+}
+
+/* ── Color themes ── */
+.green  .flow-title { color: var(--accent); }
+.green  .step-num   { background: rgba(0,200,150,.15); color: var(--accent); border: 1px solid rgba(0,200,150,.3); }
+.blue   .flow-title { color: var(--blue); }
+.blue   .step-num   { background: rgba(61,139,253,.15); color: var(--blue); border: 1px solid rgba(61,139,253,.3); }
+.orange .flow-title { color: var(--orange); }
+.orange .step-num   { background: rgba(253,126,20,.15); color: var(--orange); border: 1px solid rgba(253,126,20,.3); }
+.purple .flow-title { color: var(--purple); }
+.purple .step-num   { background: rgba(168,85,247,.15); color: var(--purple); border: 1px solid rgba(168,85,247,.3); }
+.red    .flow-title { color: var(--red); }
+.red    .step-num   { background: rgba(239,68,68,.15); color: var(--red); border: 1px solid rgba(239,68,68,.3); }
+.yellow .flow-title { color: var(--yellow); }
+.yellow .step-num   { background: rgba(251,191,36,.15); color: var(--yellow); border: 1px solid rgba(251,191,36,.3); }
+
+/* ── Role badge ── */
+.role { display: inline-block; font-size: 10px; font-weight: 700; border-radius: 4px; padding: 1px 6px; margin-left: 4px; vertical-align: middle; }
+.role-admin   { background: rgba(239,68,68,.15); color: #ef4444; }
+.role-subadmin{ background: rgba(253,126,20,.15); color: #fd7e14; }
+.role-user    { background: rgba(61,139,253,.15); color: #3d8bfd; }
+.role-head    { background: rgba(168,85,247,.15); color: #a855f7; }
+
+/* ── Full-width section ── */
+.full { grid-column: 1 / -1; }
+.role-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.role-table th { background: #0d1f35; color: var(--muted); padding: 8px 12px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; }
+.role-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.role-table tr:hover td { background: rgba(255,255,255,.02); }
+.tick { color: #00c896; font-weight: 700; }
+.cross { color: #ef4444; }
+
+/* ── System flow (horizontal) ── */
+.sys-flow { display: flex; align-items: center; gap: 0; flex-wrap: wrap; justify-content: center; margin-top: 12px; }
+.sys-box {
+  background: var(--card2); border: 1px solid var(--border); border-radius: 8px;
+  padding: 10px 14px; font-size: 12px; text-align: center; min-width: 100px;
+}
+.sys-box .icon { font-size: 20px; display: block; margin-bottom: 4px; }
+.sys-arrow { color: var(--muted); font-size: 20px; padding: 0 6px; }
+</style>
+</head>
+<body>
+
+<h1>🏢 EasySource HRMS — Process Flow Chart</h1>
+<p class="subtitle">Sabhi workflows ka complete process overview</p>
+
+<div class="grid">
+
+  <!-- 1. LOGIN FLOW -->
+  <div class="flow green">
+    <div class="flow-title"><span class="icon">🔐</span> Login & Auth Flow</div>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <div class="step-name">User visits app</div>
+        <div class="step-desc">Browser → http://localhost:5000</div>
+      </div>
+    </div>
+    <div class="decision">🔀 Session active hai?</div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <div class="step-name">Login Page</div>
+        <div class="step-desc">Username + Password enter karo</div>
+      </div>
+    </div>
+    <div class="decision">🔀 Role check</div>
+    <div class="step">
+      <div class="step-num">3a</div>
+      <div class="step-body">
+        <div class="step-name">Admin / SubAdmin / Head</div>
+        <div class="step-desc">→ Dashboard redirect</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3b</div>
+      <div class="step-body">
+        <div class="step-name">User / Viewer</div>
+        <div class="step-desc">→ My Attendance redirect</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <div class="step-name">Forgot Password</div>
+        <div class="step-desc">Email → Reset link (2hr valid) → New password</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. EMPLOYEE FLOW -->
+  <div class="flow blue">
+    <div class="flow-title"><span class="icon">👥</span> Employee Management Flow</div>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <div class="step-name">Employee Add <span class="role role-admin">Admin</span><span class="role role-subadmin">SubAdmin</span></div>
+        <div class="step-desc">Manual form — Emp ID, Name, Dept, Office, Phone</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <div class="step-name">Bulk Upload</div>
+        <div class="step-desc">Excel/CSV upload → Auto parse → Insert/Update</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <div class="step-name">Auto Login Account</div>
+        <div class="step-desc">Emp ID = Username = Default Password (auto-created)</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <div class="step-name">Edit / Soft Delete</div>
+        <div class="step-desc">Delete = status → inactive (data safe rehta hai)</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <div class="step-name">Location Mode Set</div>
+        <div class="step-desc">Office / Home-WFH / Field-Any — per employee</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. ATTENDANCE FLOW -->
+  <div class="flow orange">
+    <div class="flow-title"><span class="icon">📅</span> Attendance Flow</div>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <div class="step-name">Admin Marks Attendance <span class="role role-admin">Admin</span></div>
+        <div class="step-desc">Date select → P/A/OD/WFH/HD/L per employee</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <div class="step-name">Bulk Mark All Present</div>
+        <div class="step-desc">Ek click → sabhi employees Present</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <div class="step-name">Self Mark (Employee) <span class="role role-user">User</span></div>
+        <div class="step-desc">My Attendance → GPS location check → mark</div>
+      </div>
+    </div>
+    <div class="decision">🔀 Location mode check</div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <div class="step-name">In Range / Out of Range</div>
+        <div class="step-desc">Attendance save hoti hai + location_status flag</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <div class="step-name">Check-in Time Save</div>
+        <div class="step-desc">Time + Lat/Lng + Address automatically record</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. ROSTER FLOW -->
+  <div class="flow purple">
+    <div class="flow-title"><span class="icon">📆</span> Roster Management Flow</div>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <div class="step-name">Templates Banao</div>
+        <div class="step-desc">Named shift patterns — Mon-Sun W/WO/OD/WFH</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <div class="step-name">Employee Mapping</div>
+        <div class="step-desc">Har employee ko template assign karo (Roster Rules)</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <div class="step-name">Monthly Apply</div>
+        <div class="step-desc">Year + Month → Saturday rule → pura month generate</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <div class="step-name">Weekly View</div>
+        <div class="step-desc">Week navigate → individual day edit → save</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <div class="step-name">Excel Download</div>
+        <div class="step-desc">Monthly roster report → .xlsx export</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. WHATSAPP FLOW -->
+  <div class="flow yellow">
+    <div class="flow-title"><span class="icon">💬</span> WhatsApp Messaging Flow</div>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <div class="step-name">Attendance Template Generate</div>
+        <div class="step-desc">Date + Office select → formatted message ready</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <div class="step-name">Group Select</div>
+        <div class="step-desc">wa_groups se group ya individual number</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <div class="step-name">Send via wa.me link</div>
+        <div class="step-desc">WhatsApp Web open → pre-filled message</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <div class="step-name">Schedule Message <span class="role role-admin">Admin</span><span class="role role-subadmin">SubAdmin</span></div>
+        <div class="step-desc">Time set → daily repeat → auto-trigger on time</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <div class="step-name">Roster Notify</div>
+        <div class="step-desc">Employee-wise wa.me link → weekly roster share</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. REPORTS FLOW -->
+  <div class="flow red">
+    <div class="flow-title"><span class="icon">📊</span> Reports & Export Flow</div>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <div class="step-name">Filter Set Karo</div>
+        <div class="step-desc">Date range + Department + Office + Employee</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <div class="step-name">View Report</div>
+        <div class="step-desc">Table view → P/A/OD/WFH/HD/L per day per employee</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <div class="step-name">Export CSV</div>
+        <div class="step-desc">Raw data → .csv download (Excel compatible)</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <div class="step-name">Export Excel</div>
+        <div class="step-desc">Formatted .xlsx → colored cells, summary row</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <div class="step-name">Roster Excel Download</div>
+        <div class="step-desc">Monthly roster → 2 sheets (Calendar + Summary)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROLE PERMISSIONS TABLE -->
+  <div class="flow full green">
+    <div class="flow-title"><span class="icon">🛡️</span> Role-wise Permissions</div>
+    <table class="role-table">
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th>Admin</th>
+          <th>SubAdmin</th>
+          <th>Head</th>
+          <th>User</th>
+          <th>Viewer</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Dashboard</td><td class="tick">✅</td><td class="tick">✅</td><td class="tick">✅</td><td class="cross">❌</td><td class="tick">✅</td></tr>
+        <tr><td>Employee Add/Edit</td><td class="tick">✅</td><td class="tick">✅</td><td class="cross">❌</td><td class="cross">❌</td><td class="cross">❌</td></tr>
+        <tr><td>Employee Delete</td><td class="tick">✅</td><td class="cross">❌</td><td class="cross">❌</td><td class="cross">❌</td><td class="cross">❌</td></tr>
+        <tr><td>Mark Attendance (Admin)</td><td class="tick">✅</td><td class="tick">✅</td><td class="cross">❌</td><td class="cross">❌</td><td class="cross">❌</td></tr>
+        <tr><td>Self Attendance Mark</td><td class="cross">❌</td><td class="cross">❌</td><td class="cross">❌</td><td class="tick">✅</td><td class="cross">❌</td></tr>
+        <tr><td>Roster Manage</td><td class="tick">✅</td><td class="tick">✅</td><td class="tick">✅ (linked only)</td><td class="cross">❌</td><td class="cross">❌</td></tr>
+        <tr><td>WhatsApp Send</td><td class="tick">✅</td><td class="tick">✅</td><td class="cross">❌</td><td class="tick">✅ (if allowed)</td><td class="cross">❌</td></tr>
+        <tr><td>Schedule WA</td><td class="tick">✅</td><td class="tick">✅</td><td class="cross">❌</td><td class="cross">❌</td><td class="cross">❌</td></tr>
+        <tr><td>Reports + Export</td><td class="tick">✅</td><td class="tick">✅</td><td class="cross">❌</td><td class="cross">❌</td><td class="tick">✅</td></tr>
+        <tr><td>User Management</td><td class="tick">✅</td><td class="cross">❌</td><td class="cross">❌</td><td class="cross">❌</td><td class="cross">❌</td></tr>
+        <tr><td>Settings / Location</td><td class="tick">✅</td><td class="cross">❌</td><td class="cross">❌</td><td class="cross">❌</td><td class="cross">❌</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SYSTEM ARCHITECTURE -->
+  <div class="flow full blue">
+    <div class="flow-title"><span class="icon">⚙️</span> System Architecture</div>
+    <div class="sys-flow">
+      <div class="sys-box"><span class="icon">🌐</span>Browser<br><small style="color:var(--muted)">HTML/JS/CSS</small></div>
+      <div class="sys-arrow">→</div>
+      <div class="sys-box"><span class="icon">🐍</span>Flask App<br><small style="color:var(--muted)">app.py</small></div>
+      <div class="sys-arrow">→</div>
+      <div class="sys-box"><span class="icon">🗄️</span>SQLite DB<br><small style="color:var(--muted)">hrms.db</small></div>
+      <div class="sys-arrow">↔</div>
+      <div class="sys-box"><span class="icon">📁</span>Tables<br><small style="color:var(--muted)">11 tables</small></div>
+      <div class="sys-arrow">→</div>
+      <div class="sys-box"><span class="icon">📤</span>Exports<br><small style="color:var(--muted)">CSV / XLSX</small></div>
+      <div class="sys-arrow">→</div>
+      <div class="sys-box"><span class="icon">💬</span>WhatsApp<br><small style="color:var(--muted)">wa.me links</small></div>
+    </div>
+    <div style="margin-top:14px;font-size:12px;color:var(--muted);text-align:center">
+      DB Tables: users · employees · attendance · roster · roster_rules · roster_templates · wa_groups · wa_schedules · whatsapp_messages · whatsapp_settings · location_settings · email_settings · password_reset · heads · head_employees
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
