@@ -49,6 +49,14 @@
 {% endblock %}
 
 {% block content %}
+
+<!-- Location Alert Badge -->
+<div id="locAlertBadge" style="display:none;align-items:center;gap:10px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:10px 16px;margin-bottom:16px">
+  <span style="font-size:18px">❌</span>
+  <span style="color:#ef4444;font-weight:600;font-size:13px"></span>
+  <a href="/attendance" style="margin-left:auto;font-size:12px;color:#ef4444;text-decoration:underline">View Attendance</a>
+</div>
+
 <!-- DATE RANGE + OFFICE FILTER BAR -->
 <div class="dash-filters">
   <span class="df-label">📅 Date Range:</span>
@@ -237,5 +245,18 @@ function renderOfficeCards(officeStats, activeFilter) {
 
 // Initial load
 refreshDashboard();
+
+// Location alert - out of range employees today
+(function(){
+  fetch('/api/attendance/get', {method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({date: new Date().toISOString().slice(0,10)})
+  }).then(r=>r.json()).then(records=>{
+    var outOfRange = (records||[]).filter(r=>r.location_status==='out_of_range');
+    if(outOfRange.length > 0){
+      var el = document.getElementById('locAlertBadge');
+      if(el){ el.style.display='flex'; el.querySelector('span').textContent = outOfRange.length + ' employees out of range today'; }
+    }
+  }).catch(()=>{});
+})();
 </script>
 {% endblock %}

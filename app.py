@@ -18,7 +18,10 @@ app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['SESSION_COOKIE_SECURE']   = False   # True only if HTTPS
 app.config['PERMANENT_SESSION_LIFETIME'] = 86400 * 7  # 7 days
 
-DB = 'database/hrms.db'
+import pathlib as _pl
+_DB_DIR = os.environ.get('DB_DIR', 'database')
+_pl.Path(_DB_DIR).mkdir(exist_ok=True)
+DB = os.path.join(_DB_DIR, 'hrms.db')
 
 def get_db():
     conn = sqlite3.connect(DB)

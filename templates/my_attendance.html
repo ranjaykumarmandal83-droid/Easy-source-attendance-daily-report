@@ -1,27 +1,31 @@
 {% extends "base.html" %}
-{% block title %}My Attendance – HRMS{% endblock %}
+{% block title %}My Attendance – EasySource HRMS{% endblock %}
 {% block page_title %}My Attendance{% endblock %}
 {% block breadcrumb %}Self Service{% endblock %}
 
 {% block extra_style %}
-.status-btn { padding:14px 10px; border-radius:12px; border:2px solid var(--border); background:rgba(255,255,255,.03); cursor:pointer; text-align:center; transition:all .18s; font-size:12px; font-weight:600; color:var(--muted); }
-.status-btn:hover { transform:translateY(-2px); }
-.status-btn.active { border-color:currentColor; background:rgba(255,255,255,.08); color:var(--text); }
-.status-P   { color:#4ade80; } .status-P.active { background:rgba(74,222,128,.1); border-color:#4ade80; }
-.status-L   { color:#f87171; } .status-L.active { background:rgba(248,113,113,.1); border-color:#f87171; }
-.status-WFH { color:#a5b4fc; } .status-WFH.active { background:rgba(165,180,252,.1); border-color:#a5b4fc; }
-.status-OD  { color:#ffb74d; } .status-OD.active { background:rgba(255,183,77,.1); border-color:#ffb74d; }
-.status-HD  { color:#fb923c; } .status-HD.active { background:rgba(251,146,60,.1); border-color:#fb923c; }
-.status-WO  { color:#94a3b8; } .status-WO.active { background:rgba(148,163,184,.1); border-color:#94a3b8; }
-.att-row { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--border); font-size:13px; }
-.att-row:last-child { border-bottom:none; }
-.att-status-badge { font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px; min-width:46px; text-align:center; }
-.emp-hero { background:linear-gradient(135deg,rgba(0,200,150,.12),rgba(61,90,254,.1)); border:1px solid rgba(0,200,150,.2); border-radius:16px; padding:20px; margin-bottom:18px; }
+.status-btn{padding:14px 10px;border-radius:12px;border:2px solid var(--border);background:rgba(255,255,255,.03);cursor:pointer;text-align:center;transition:all .18s;font-size:12px;font-weight:600;color:var(--muted)}
+.status-btn:hover{transform:translateY(-2px);border-color:var(--border2)}
+.status-btn.active{border-color:currentColor;background:rgba(255,255,255,.08);color:var(--text)}
+.status-P{color:#4ade80}.status-P.active{background:rgba(74,222,128,.1);border-color:#4ade80}
+.status-L{color:#f87171}.status-L.active{background:rgba(248,113,113,.1);border-color:#f87171}
+.status-WFH{color:#a5b4fc}.status-WFH.active{background:rgba(165,180,252,.1);border-color:#a5b4fc}
+.status-OD{color:#ffb74d}.status-OD.active{background:rgba(255,183,77,.1);border-color:#ffb74d}
+.status-HD{color:#fb923c}.status-HD.active{background:rgba(251,146,60,.1);border-color:#fb923c}
+.status-WO{color:#94a3b8}.status-WO.active{background:rgba(148,163,184,.1);border-color:#94a3b8}
+.att-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px}
+.att-row:last-child{border-bottom:none}
+.att-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;min-width:46px;text-align:center}
+.emp-hero{background:linear-gradient(135deg,rgba(0,200,150,.12),rgba(61,90,254,.1));border:1px solid rgba(0,200,150,.2);border-radius:16px;padding:20px;margin-bottom:18px}
+#locPanel{background:rgba(0,200,150,.07);border:1px solid rgba(0,200,150,.2);border-radius:12px;padding:14px;margin-bottom:16px}
+.loc-badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:3px 10px;border-radius:20px;font-weight:600}
+.loc-in{background:rgba(0,200,150,.15);color:#00c896;border:1px solid rgba(0,200,150,.3)}
+.loc-out{background:rgba(239,68,68,.15);color:#ef4444;border:1px solid rgba(239,68,68,.3)}
+.loc-checking{background:rgba(255,193,7,.15);color:#ffc107;border:1px solid rgba(255,193,7,.3)}
 {% endblock %}
 
 {% block content %}
-<div style="max-width:600px;margin:0 auto">
-
+<div style="max-width:620px;margin:0 auto">
   {% if not emp_id %}
   <div class="card" style="text-align:center;padding:40px">
     <div style="font-size:40px;margin-bottom:12px">⚠️</div>
@@ -30,7 +34,6 @@
   </div>
   {% else %}
 
-  <!-- Employee Card -->
   {% if emp %}
   <div class="emp-hero">
     <div style="display:flex;align-items:center;gap:14px">
@@ -40,77 +43,70 @@
       <div>
         <div style="font-size:17px;font-weight:700">{{ emp.name }}</div>
         <div style="font-size:12px;color:var(--muted)">{{ emp.emp_id }} · {{ emp.designation or '' }} · {{ emp.department or '' }}</div>
-        <div style="font-size:11.5px;color:var(--accent);margin-top:2px">📍 {{ emp.location or '—' }} &nbsp;🏢 {{ emp.office_setting or '—' }}</div>
+        <div style="font-size:11.5px;color:var(--accent);margin-top:2px">🏢 {{ emp.office_setting or '—' }}</div>
       </div>
     </div>
   </div>
   {% endif %}
 
-  <!-- TODAY MARK CARD -->
+  <!-- Location & Time Panel -->
+  <div id="locPanel">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <b style="font-size:13px">📍 Location & Time</b>
+      <span style="font-size:13px;font-family:'JetBrains Mono',monospace;color:var(--accent)" id="locClock"></span>
+    </div>
+    <div id="locStatusBadge"><span class="loc-badge loc-checking">⏳ Location fetch ho raha hai...</span></div>
+    <div id="locMapLink" style="margin-top:4px"></div>
+  </div>
+
+  <!-- Mark Attendance -->
   <div class="card" style="margin-bottom:18px">
     <div class="card-header">
       <span class="card-title">📅 Aaj ki Attendance</span>
       <span style="font-size:12px;color:var(--muted)" id="todayDateLabel"></span>
     </div>
-
     <div id="alreadyMarked" style="display:none;padding:10px 14px;border-radius:10px;margin-bottom:14px;font-size:13px;font-weight:600"></div>
-
-    <!-- Status Grid -->
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px">
-      <div class="status-btn status-P" id="btn_P" onclick="selectStatus('P')">
-        <div style="font-size:22px;margin-bottom:4px">✅</div>Present
-      </div>
-      <div class="status-btn status-WFH" id="btn_WFH" onclick="selectStatus('WFH')">
-        <div style="font-size:22px;margin-bottom:4px">🏠</div>WFH
-      </div>
-      <div class="status-btn status-OD" id="btn_OD" onclick="selectStatus('OD')">
-        <div style="font-size:22px;margin-bottom:4px">🚗</div>OD
-      </div>
-      <div class="status-btn status-HD" id="btn_HD" onclick="selectStatus('HD')">
-        <div style="font-size:22px;margin-bottom:4px">🌓</div>Half Day
-      </div>
-      <div class="status-btn status-L" id="btn_L" onclick="selectStatus('L')">
-        <div style="font-size:22px;margin-bottom:4px">🏖️</div>Leave
-      </div>
-      <div class="status-btn status-WO" id="btn_WO" onclick="selectStatus('WO')">
-        <div style="font-size:22px;margin-bottom:4px">📴</div>Week Off
-      </div>
+      <div class="status-btn status-P"   id="btn_P"   onclick="selectStatus('P')">  <div style="font-size:22px;margin-bottom:4px">✅</div>Present</div>
+      <div class="status-btn status-WFH" id="btn_WFH" onclick="selectStatus('WFH')"><div style="font-size:22px;margin-bottom:4px">🏠</div>WFH</div>
+      <div class="status-btn status-OD"  id="btn_OD"  onclick="selectStatus('OD')"> <div style="font-size:22px;margin-bottom:4px">🚗</div>On Duty</div>
+      <div class="status-btn status-HD"  id="btn_HD"  onclick="selectStatus('HD')"> <div style="font-size:22px;margin-bottom:4px">🌓</div>Half Day</div>
+      <div class="status-btn status-L"   id="btn_L"   onclick="selectStatus('L')">  <div style="font-size:22px;margin-bottom:4px">🏖️</div>Leave</div>
+      <div class="status-btn status-WO"  id="btn_WO"  onclick="selectStatus('WO')"> <div style="font-size:22px;margin-bottom:4px">📴</div>Week Off</div>
     </div>
-
-    <!-- Remark -->
     <div class="form-group">
       <label style="font-size:12px">📝 Remark (optional)</label>
-      <input class="form-control" id="remarkInput" placeholder="e.g. Client visit, Medical leave, Work from Noida...">
+      <input class="form-control" id="remarkInput" placeholder="e.g. Client visit, Medical leave...">
     </div>
-
     <button class="btn btn-primary" style="width:100%;padding:14px;font-size:15px" id="markBtn" onclick="markAttendance()">
       ✅ Attendance Mark Karo
     </button>
   </div>
 
-  <!-- ATTENDANCE HISTORY -->
+  <!-- History -->
   <div class="card">
     <div class="card-header">
-      <span class="card-title">📊 My Attendance History</span>
+      <span class="card-title">📊 Attendance History</span>
       <span id="monthSummary" style="font-size:11.5px;color:var(--muted)"></span>
     </div>
     <div id="attList">
       {% if records %}
         {% for r in records %}
         <div class="att-row">
-          <div style="min-width:90px;font-size:12.5px;color:var(--muted)">
-            {{ r.date }}
-          </div>
-          <span class="att-status-badge
-            {% if r.status == 'P' %}style="background:rgba(74,222,128,.12);color:#4ade80"
-            {% elif r.status == 'WFH' %}style="background:rgba(165,180,252,.12);color:#a5b4fc"
-            {% elif r.status == 'OD' %}style="background:rgba(255,183,77,.12);color:#ffb74d"
-            {% elif r.status in ['L','A'] %}style="background:rgba(248,113,113,.12);color:#f87171"
-            {% elif r.status == 'HD' %}style="background:rgba(251,146,60,.12);color:#fb923c"
-            {% else %}style="background:rgba(148,163,184,.12);color:#94a3b8"{% endif %}">
+          <div style="min-width:95px;font-size:12px;color:var(--muted)">{{ r.date }}</div>
+          <div style="min-width:55px;font-size:11px;color:var(--muted)">{{ r.check_in_time or '—' }}</div>
+          <span class="att-badge" style="
+            {% if r.status == 'P' %}background:rgba(74,222,128,.12);color:#4ade80
+            {% elif r.status == 'WFH' %}background:rgba(165,180,252,.12);color:#a5b4fc
+            {% elif r.status == 'OD' %}background:rgba(255,183,77,.12);color:#ffb74d
+            {% elif r.status in ['L','A'] %}background:rgba(248,113,113,.12);color:#f87171
+            {% elif r.status == 'HD' %}background:rgba(251,146,60,.12);color:#fb923c
+            {% else %}background:rgba(148,163,184,.12);color:#94a3b8{% endif %}">
             {{ r.status }}
           </span>
-          <div style="flex:1;color:var(--muted);font-size:12px">{{ r.remark or '' }}</div>
+          {% if r.location_status == 'in_range' %}<span style="font-size:11px;color:#00c896" title="In Range">✅</span>
+          {% elif r.location_status == 'out_of_range' %}<span style="font-size:11px;color:#ef4444" title="Out of Range">❌</span>{% endif %}
+          <div style="flex:1;color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r.remark or '' }}</div>
         </div>
         {% endfor %}
       {% else %}
@@ -118,77 +114,103 @@
       {% endif %}
     </div>
   </div>
-
   {% endif %}
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-const TODAY    = '{{ today }}';
-const EMP_ID   = '{{ emp_id }}';
+const TODAY  = '{{ today }}';
+const EMP_ID = '{{ emp_id }}';
 let selectedStatus = 'P';
+let _geoData = null;
 
-// Show today date
-document.getElementById('todayDateLabel').textContent =
-  new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+// Live Clock
+function tick(){ var el=document.getElementById('locClock'); if(el) el.textContent=new Date().toLocaleTimeString('en-IN'); }
+tick(); setInterval(tick,1000);
 
-// Check if already marked today
-const todayRecord = {{ records | tojson }}.find(r => r.date === TODAY);
-if (todayRecord) {
-  showAlreadyMarked(todayRecord.status, todayRecord.remark);
-  selectStatus(todayRecord.status);
+// GPS
+function getLocation(){
+  updateLocUI('checking');
+  if(!navigator.geolocation){ updateLocUI('unsupported'); return; }
+  navigator.geolocation.getCurrentPosition(
+    function(pos){
+      _geoData={latitude:pos.coords.latitude,longitude:pos.coords.longitude,accuracy:pos.coords.accuracy};
+      updateLocUI('got');
+      fetch('https://nominatim.openstreetmap.org/reverse?lat='+pos.coords.latitude+'&lon='+pos.coords.longitude+'&format=json')
+        .then(r=>r.json()).then(d=>{ if(d&&d.display_name) _geoData.address=d.display_name.substring(0,120); updateLocUI('got'); }).catch(()=>{});
+    },
+    function(){ updateLocUI('denied'); },
+    {enableHighAccuracy:true,timeout:10000,maximumAge:60000}
+  );
 }
+
+function updateLocUI(status){
+  var el=document.getElementById('locStatusBadge'), mapEl=document.getElementById('locMapLink');
+  if(!el) return;
+  var html='';
+  if(status==='checking')    html='<span class="loc-badge loc-checking">⏳ Location fetch ho raha hai...</span>';
+  if(status==='denied')      html='<span class="loc-badge loc-out">❌ Location denied — browser settings check karo</span>';
+  if(status==='unsupported') html='<span class="loc-badge loc-out">❌ Browser location support nahi karta</span>';
+  if(status==='got'&&_geoData){
+    html='<span class="loc-badge loc-in">✅ Location mila — ~'+Math.round(_geoData.accuracy||0)+'m accuracy</span>';
+    if(_geoData.address) html+='<div style="font-size:11px;color:var(--muted);margin-top:4px">📍 '+_geoData.address+'</div>';
+    if(mapEl) mapEl.innerHTML='<a href="https://maps.google.com?q='+_geoData.latitude+','+_geoData.longitude+'" target="_blank" style="font-size:11px;color:#3d5afe;text-decoration:none">🗺 Map pe dekho →</a>';
+  }
+  el.innerHTML=html;
+}
+
+// Today
+document.getElementById('todayDateLabel').textContent=new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+// Already marked?
+const records={{records|tojson}};
+const todayRecord=records.find(r=>r.date===TODAY);
+if(todayRecord){ showAlreadyMarked(todayRecord.status,todayRecord.remark); selectStatus(todayRecord.status); }
 
 // Month summary
-const records = {{ records | tojson }};
-const thisMonth = TODAY.slice(0,7);
-const monthRecs = records.filter(r => r.date.startsWith(thisMonth));
-const counts = {};
-monthRecs.forEach(r => counts[r.status] = (counts[r.status]||0)+1);
-const parts = Object.entries(counts).map(([s,c]) => `${s}:${c}`);
-if (parts.length) document.getElementById('monthSummary').textContent = 'This month: ' + parts.join(' | ');
+const mRecs=records.filter(r=>r.date.startsWith(TODAY.slice(0,7)));
+const counts={};
+mRecs.forEach(r=>counts[r.status]=(counts[r.status]||0)+1);
+const parts=Object.entries(counts).map(([s,c])=>s+':'+c);
+if(parts.length) document.getElementById('monthSummary').textContent='This month: '+parts.join(' | ');
 
-function showAlreadyMarked(status, remark) {
-  const el = document.getElementById('alreadyMarked');
-  const colors = { P:'rgba(74,222,128,.12)', WFH:'rgba(165,180,252,.12)', OD:'rgba(255,183,77,.12)',
-                   L:'rgba(248,113,113,.12)', HD:'rgba(251,146,60,.12)', WO:'rgba(148,163,184,.12)' };
-  el.style.background = colors[status] || 'rgba(0,200,150,.1)';
-  el.style.color = 'var(--text)';
-  el.innerHTML = `✅ Aaj ki attendance already mark hai: <b>${status}</b>${remark?' — '+remark:''}`;
-  el.style.display = 'block';
-  document.getElementById('markBtn').textContent = '🔄 Update Karo';
+function showAlreadyMarked(status,remark){
+  const el=document.getElementById('alreadyMarked');
+  const cols={P:'rgba(74,222,128,.12)',WFH:'rgba(165,180,252,.12)',OD:'rgba(255,183,77,.12)',L:'rgba(248,113,113,.12)',HD:'rgba(251,146,60,.12)',WO:'rgba(148,163,184,.12)'};
+  el.style.background=cols[status]||'rgba(0,200,150,.1)';
+  el.style.color='var(--text)';
+  el.innerHTML='✅ Aaj already mark hai: <b>'+status+'</b>'+(remark?' — '+remark:'');
+  el.style.display='block';
+  document.getElementById('markBtn').textContent='🔄 Update Karo';
 }
 
-function selectStatus(s) {
-  selectedStatus = s;
-  document.querySelectorAll('.status-btn').forEach(b => b.classList.remove('active'));
-  const btn = document.getElementById('btn_' + s);
-  if (btn) btn.classList.add('active');
+function selectStatus(s){
+  selectedStatus=s;
+  document.querySelectorAll('.status-btn').forEach(b=>b.classList.remove('active'));
+  var btn=document.getElementById('btn_'+s);
+  if(btn) btn.classList.add('active');
 }
 
-async function markAttendance() {
-  if (!selectedStatus) { showToast('Pehle status select karo', 'error'); return; }
-  const btn    = document.getElementById('markBtn');
-  const remark = document.getElementById('remarkInput').value.trim();
-  btn.disabled = true; btn.textContent = '⏳ Saving...';
-  const res = await api('/api/my/mark', { status: selectedStatus, remark });
-  if (res.success) {
-    showToast('✅ Attendance marked: ' + selectedStatus);
-    showAlreadyMarked(selectedStatus, remark);
-    // Update list
-    const existing = document.querySelector('#attList .att-row');
-    if (!existing || !existing.querySelector('div').textContent.includes(TODAY)) {
-      location.reload();
-    }
+async function markAttendance(){
+  if(!selectedStatus){ showToast('Pehle status select karo','error'); return; }
+  const btn=document.getElementById('markBtn');
+  const remark=document.getElementById('remarkInput').value.trim();
+  btn.disabled=true; btn.textContent='⏳ Saving...';
+  const payload={status:selectedStatus,remark,check_in_time:new Date().toTimeString().substring(0,8)};
+  if(_geoData){ payload.latitude=_geoData.latitude; payload.longitude=_geoData.longitude; payload.address=_geoData.address||''; }
+  const res=await api('/api/my/mark',payload);
+  if(res.success){
+    showToast('✅ Attendance marked: '+selectedStatus);
+    showAlreadyMarked(selectedStatus,remark);
+    setTimeout(()=>location.reload(),1200);
   } else {
-    showToast(res.error || 'Error', 'error');
+    showToast(res.error||'Error','error');
+    btn.disabled=false; btn.textContent='🔄 Update Karo';
   }
-  btn.disabled = false;
-  btn.textContent = '🔄 Update Karo';
 }
 
-// Pre-select P by default
 selectStatus('P');
+getLocation();
 </script>
 {% endblock %}

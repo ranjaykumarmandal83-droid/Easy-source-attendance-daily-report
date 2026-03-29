@@ -165,10 +165,10 @@
     <div style="max-height:320px;overflow-y:auto;border:1px solid var(--border);border-radius:8px">
       <table>
         <thead><tr>
-          <th>Date</th><th>Status</th><th>Remark</th><th>Marked By</th>
+          <th>Date</th><th>Status</th><th>Time</th><th>Location</th><th>Remark</th><th>Marked By</th>
         </tr></thead>
         <tbody id="histBody">
-          <tr><td colspan="4" style="text-align:center;color:var(--muted);padding:24px">Employee aur date range select karo</td></tr>
+          <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px">Employee aur date range select karo</td></tr>
         </tbody>
       </table>
     </div>
@@ -389,15 +389,22 @@ async function loadEmpHistory() {
   const stCls = {P:'present', A:'absent', OD:'od', L:'leave', WFH:'wo'};
   const tbody = document.getElementById('histBody');
   if(!records.length) {
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px">Koi records nahi</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">Koi records nahi</td></tr>';
     return;
   }
-  tbody.innerHTML = records.map(r => `<tr>
+  tbody.innerHTML = records.map(r => {
+    var locBadge = '—';
+    if(r.location_status==='in_range')      locBadge='<span style="color:#00c896;font-size:11px">✅ In Range</span>';
+    else if(r.location_status==='out_of_range') locBadge='<span style="color:#ef4444;font-size:11px">❌ Out of Range</span>';
+    else if(r.location_status==='home_not_set') locBadge='<span style="color:#ffc107;font-size:11px">⚠ Home not set</span>';
+    return `<tr>
     <td style="font-family:'JetBrains Mono',monospace;font-size:12px">${r.date}</td>
     <td><span class="badge badge-${stCls[r.status]||'wo'}">${r.status}</span></td>
+    <td style="color:var(--muted);font-size:12px">${r.check_in_time||'—'}</td>
+    <td>${locBadge}</td>
     <td style="color:var(--muted)">${r.remark||'—'}</td>
     <td style="color:var(--muted);font-size:11px">${r.marked_by||'—'}</td>
-  </tr>`).join('');
+  </tr>`;}).join('');
 }
 
 loadAttendance();

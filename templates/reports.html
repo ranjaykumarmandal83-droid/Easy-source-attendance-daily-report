@@ -221,7 +221,7 @@ function renderList() {
   const stLbl = {P:'Present', A:'Absent', OD:'On Duty', L:'Leave', WFH:'WFH'};
   const stCls = {P:'present', A:'absent', OD:'od', L:'leave', WFH:'wo'};
   let html = `<div class="pivot-wrap"><table class="pivot-table">
-    <thead><tr><th>Emp Code</th><th>Emp Name</th><th>Department</th><th>Date</th><th>Status</th><th>Remark</th></tr></thead>
+    <thead><tr><th>Emp Code</th><th>Emp Name</th><th>Department</th><th>Date</th><th>Status</th><th>Time</th><th>Location</th><th>Remark</th></tr></thead>
     <tbody>`;
   reportData.forEach(r => {
     html += `<tr>
@@ -255,7 +255,7 @@ function exportCSV() {
     });
   } else {
     rows = [['Emp Code','Emp Name','Department','Date','Status','Remark'],
-      ...reportData.map(r=>[r.emp_id||'',r.name||'',r.department||'',r.date||'',r.status||'',r.remark||''])];
+      ...reportData.map(r=>[r.emp_id||'',r.name||'',r.department||'',r.date||'',r.status||'',r.check_in_time||'',r.location_status||'',r.remark||''])];
   }
 
   const csv = rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\r\n');
@@ -287,7 +287,7 @@ function exportExcel() {
     });
   } else {
     data = [['Emp Code','Emp Name','Department','Date','Status','Remark'],
-      ...reportData.map(r=>[r.emp_id||'',r.name||'',r.department||'',r.date||'',r.status||'',r.remark||''])];
+      ...reportData.map(r=>[r.emp_id||'',r.name||'',r.department||'',r.date||'',r.status||'',r.check_in_time||'',r.location_status||'',r.remark||''])];
   }
 
   try {
