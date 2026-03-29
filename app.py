@@ -127,6 +127,10 @@ def init_db():
         "ALTER TABLE employees ADD COLUMN status TEXT DEFAULT 'active'",
         "ALTER TABLE employees ADD COLUMN office_setting TEXT DEFAULT ''",
         "ALTER TABLE employees ADD COLUMN gender TEXT DEFAULT ''",
+        "ALTER TABLE employees ADD COLUMN location_mode TEXT DEFAULT 'office'",
+        "ALTER TABLE employees ADD COLUMN home_latitude REAL",
+        "ALTER TABLE employees ADD COLUMN home_longitude REAL",
+        "ALTER TABLE employees ADD COLUMN home_radius INTEGER DEFAULT 200",
         "ALTER TABLE users ADD COLUMN email TEXT DEFAULT ''",
         "ALTER TABLE users ADD COLUMN emp_id TEXT DEFAULT ''",
         "ALTER TABLE users ADD COLUMN can_whatsapp INTEGER DEFAULT 0",
@@ -134,6 +138,11 @@ def init_db():
         "ALTER TABLE users ADD COLUMN name TEXT DEFAULT ''",
         "ALTER TABLE whatsapp_messages ADD COLUMN scheduled_time TEXT",
         "ALTER TABLE whatsapp_messages ADD COLUMN sent_at TIMESTAMP",
+        "ALTER TABLE attendance ADD COLUMN check_in_time TEXT",
+        "ALTER TABLE attendance ADD COLUMN latitude REAL",
+        "ALTER TABLE attendance ADD COLUMN longitude REAL",
+        "ALTER TABLE attendance ADD COLUMN location_address TEXT DEFAULT ''",
+        "ALTER TABLE attendance ADD COLUMN location_status TEXT DEFAULT 'not_checked'",
     ]
     for sql in migrations:
         try:
@@ -248,6 +257,19 @@ def init_db():
     conn.execute("INSERT OR IGNORE INTO email_settings (id) VALUES (1)")
     conn.commit()
 
+    # Location settings table (office-wise allowed attendance range)
+    conn.execute('''CREATE TABLE IF NOT EXISTS location_settings (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        office_name TEXT NOT NULL,
+        latitude REAL NOT NULL,
+        longitude REAL NOT NULL,
+        radius_meters INTEGER DEFAULT 200,
+        is_active INTEGER DEFAULT 1,
+        created_by TEXT DEFAULT '',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )''')
+    conn.commit()
+
     # Password reset tokens table
     conn.execute('''CREATE TABLE IF NOT EXISTS password_reset (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -341,7 +363,7 @@ def forgot_password():
                          (u['id'], token, expires))
             conn.commit()
             # Send reset email
-            reset_url = f"http://localhost:5000/reset-password/{token}"
+            reset_url = url_for('reset_password', token=token, _external=True)
             html = f"""
             <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:24px;background:#f9f9f9;border-radius:12px">
               <h2 style="color:#1a3a5c">🔐 Password Reset</h2>
@@ -1291,8 +1313,8 @@ def api_delete_head():
     head = conn.execute('SELECT * FROM heads WHERE id=?', (head_id,)).fetchone()
     if head:
         head = dict(head)
-        # Revert role to subadmin
-        conn.execute('UPDATE users SET role="subadmin" WHERE id=?', (head['user_id'],))
+        # Revert role to user
+        conn.execute('UPDATE users SET role="user" WHERE id=?', (head['user_id'],))
         conn.execute('DELETE FROM head_employees WHERE head_emp_id=?', (head['emp_id'],))
         conn.execute('DELETE FROM heads WHERE id=?', (head_id,))
         conn.commit()
@@ -2540,6 +2562,7 @@ def profile():
     return render_template('profile.html', user=u, emp=emp)
 
 @app.route('/mobile')
+@login_required
 def mobile():
     return render_template('mobile_attendance.html')
 
@@ -2602,7 +2625,7 @@ def api_roster_apply_month():
     first_day, days_in_month = calendar.monthrange(year, month)
     saturdays = []
     for day in range(1, days_in_month + 1):
-        if calendar.date(year, month, day).weekday() == 5:  # 5 = Saturday
+        if date(year, month, day).weekday() == 5:  # 5 = Saturday
             saturdays.append(day)
 
     # Build Saturday rule: which occurrence numbers are ON
