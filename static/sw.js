@@ -1,5 +1,5 @@
-// EasySource HRMS Service Worker v1.0
-const CACHE = 'hrms-v1';
+// EasySource HRMS Service Worker v1.1
+const CACHE = 'hrms-v2';
 const OFFLINE_URL = '/app';
 
 const STATIC_ASSETS = [
