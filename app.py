@@ -2043,11 +2043,11 @@ LOCATION_SETTINGS_TEMPLATE = """
 </head>
 <body>
 <div class="page-card">
+  <a href="/settings" class="back-btn" style="display:inline-flex;align-items:center;gap:6px;margin-bottom:16px">← Back to Settings</a>
   <div class="page-hdr">
     <div class="page-title">📍 Attendance Location Range Settings</div>
     <div class="d-flex gap-2">
       <button class="btn-add" onclick="addRow()">+ Add Office</button>
-      <a href="/settings" class="back-btn">← Settings</a>
     </div>
   </div>
 
@@ -2199,6 +2199,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
 </head>
 <body>
 <div class="page-card">
+  <a href="/settings" class="back-btn" style="display:inline-flex;align-items:center;gap:6px;margin-bottom:16px">← Back to Settings</a>
 
   <!-- Header -->
   <div class="d-flex justify-content-between align-items-start mb-3">
@@ -2208,7 +2209,6 @@ tr:hover td{background:rgba(255,255,255,.02)}
     </div>
     <div class="d-flex gap-2">
       <a href="/location-settings" class="back-btn">🏢 Office Locations</a>
-      <a href="/settings" class="back-btn">← Settings</a>
     </div>
   </div>
 
