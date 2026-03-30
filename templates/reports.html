@@ -96,7 +96,7 @@
   <!-- Table -->
   <div id="reportTableWrap">
     <div style="text-align:center;color:var(--muted);padding:48px;font-size:13px">
-      📅 Date range select karo aur Generate dabao
+      📅 Select a date range and click Generate
     </div>
   </div>
 </div>
@@ -121,7 +121,7 @@ async function generateReport() {
   const dept   = document.getElementById('deptFilter').value.trim();
   const office = document.getElementById('officeFilter').value;
   const empQ   = document.getElementById('empFilter').value.trim();
-  if(!from || !to){ showToast('Date range select karo', 'error'); return; }
+  if(!from || !to){ showToast('Please select a date range', 'error'); return; }
 
   const btn = document.getElementById('genBtn');
   btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
@@ -140,7 +140,7 @@ async function generateReport() {
   btn.disabled = false;
 
   if(!reportData.length){
-    document.getElementById('reportTableWrap').innerHTML = '<div style="text-align:center;color:var(--muted);padding:48px">Koi records nahi mile</div>';
+    document.getElementById('reportTableWrap').innerHTML = '<div style="text-align:center;color:var(--muted);padding:48px">No records found</div>';
     document.getElementById('summaryGrid').style.display = 'none';
     return;
   }
@@ -238,7 +238,7 @@ function renderList() {
 
 // ── EXPORT CSV (server-side safe) ──
 function exportCSV() {
-  if(!reportData.length){ showToast('Pehle report generate karo', 'error'); return; }
+  if(!reportData.length){ showToast('Please generate a report first', 'error'); return; }
   const from = document.getElementById('fromDate').value;
   const to   = document.getElementById('toDate').value;
 
@@ -264,13 +264,13 @@ function exportCSV() {
   a.href = URL.createObjectURL(blob);
   a.download = `Attendance_${from}_to_${to}.csv`;
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  showToast('✅ CSV export ho gaya!');
+  showToast('✅ CSV exported!');
 }
 
 // ── EXPORT EXCEL ──
 function exportExcel() {
-  if(!reportData.length){ showToast('Pehle report generate karo', 'error'); return; }
-  if(typeof XLSX === 'undefined'){ showToast('Excel library load ho rahi hai, 2 sec baad try karo', 'info'); return; }
+  if(!reportData.length){ showToast('Please generate a report first', 'error'); return; }
+  if(typeof XLSX === 'undefined'){ showToast('Excel library is loading, please try again in 2 seconds', 'info'); return; }
 
   const from = document.getElementById('fromDate').value;
   const to   = document.getElementById('toDate').value;
@@ -298,9 +298,9 @@ function exportExcel() {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Attendance');
     XLSX.writeFile(wb, `Attendance_${from}_to_${to}.xlsx`);
-    showToast('✅ Excel export ho gaya!');
+    showToast('✅ Excel exported!');
   } catch(e) {
-    showToast('Excel error: ' + e.message + ' — CSV try karo', 'error');
+    showToast('Excel error: ' + e.message + ' — try CSV instead', 'error');
   }
 }
 </script>

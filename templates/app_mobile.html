@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="HRMS">
+<meta name="theme-color" content="#00c896">
+<title>EasySource HRMS</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/static/icon-192.png">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0e1a;--card:#161b27;--card2:#1c2333;
+  --accent:#00c896;--accent2:#3d8bfd;
+  --border:rgba(255,255,255,.08);--text:#e6edf3;--muted:#8b949e;
+  --P:#4ade80;--A:#f87171;--OD:#ffb74d;--WFH:#a5b4fc;--HD:#fb923c;--L:#f87171;--WO:#64748b;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bot: env(safe-area-inset-bottom, 0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;overflow:hidden}
+#app{display:flex;flex-direction:column;height:100%;padding-top:var(--safe-top)}
+
+/* ── Top Bar ── */
+#topbar{
+  background:var(--card);border-bottom:1px solid var(--border);
+  padding:12px 16px;display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;
+}
+.topbar-logo{display:flex;align-items:center;gap:8px}
+.topbar-logo img{height:26px}
+.topbar-title{font-size:16px;font-weight:700;color:var(--accent)}
+.topbar-user{display:flex;align-items:center;gap:8px}
+.user-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#0a0e1a;cursor:pointer}
+
+/* ── Pages ── */
+#pages{flex:1;overflow:hidden;position:relative}
+.page{position:absolute;inset:0;overflow-y:auto;padding:16px;display:none;-webkit-overflow-scrolling:touch}
+.page.active{display:block}
+
+/* ── Bottom Nav ── */
+#bottomnav{
+  background:var(--card);border-top:1px solid var(--border);
+  display:flex;padding-bottom:var(--safe-bot);flex-shrink:0;
+}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 4px;gap:3px;background:none;border:none;color:var(--muted);font-size:10px;font-weight:600;cursor:pointer;transition:.15s;-webkit-tap-highlight-color:transparent}
+.nav-btn i{font-size:18px}
+.nav-btn.active{color:var(--accent)}
+.nav-btn.active i{color:var(--accent)}
+
+/* ── Cards ── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px}
+.card-sm{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px}
+
+/* ── Mark Attendance Buttons ── */
+.status-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}
+.status-btn{padding:16px 8px;border-radius:12px;border:2px solid var(--border);background:rgba(255,255,255,.03);cursor:pointer;text-align:center;transition:all .18s;font-size:11px;font-weight:700;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:4px}
+.status-btn .icon{font-size:22px}
+.status-btn.sel{border-color:currentColor;background:rgba(255,255,255,.08)}
+.s-P{color:var(--P)}.s-P.sel{background:rgba(74,222,128,.12);border-color:var(--P)}
+.s-A{color:var(--A)}.s-A.sel{background:rgba(248,113,113,.12);border-color:var(--A)}
+.s-OD{color:var(--OD)}.s-OD.sel{background:rgba(255,183,77,.12);border-color:var(--OD)}
+.s-WFH{color:var(--WFH)}.s-WFH.sel{background:rgba(165,180,252,.12);border-color:var(--WFH)}
+.s-HD{color:var(--HD)}.s-HD.sel{background:rgba(251,146,60,.12);border-color:var(--HD)}
+.s-L{color:var(--L)}.s-L.sel{background:rgba(248,113,113,.12);border-color:var(--L)}
+
+/* ── Btn ── */
+.btn-primary{background:linear-gradient(135deg,#00c896,#00a87a);color:#fff;border:none;border-radius:12px;padding:14px;width:100%;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px;transition:.15s}
+.btn-primary:active{transform:scale(.98)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.btn-outline{background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:10px;padding:10px 16px;font-size:13px;cursor:pointer}
+
+/* ── Location Panel ── */
+#locPanel{background:rgba(0,200,150,.07);border:1px solid rgba(0,200,150,.2);border-radius:12px;padding:12px;margin-bottom:12px}
+.loc-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600}
+.loc-in{background:rgba(0,200,150,.15);color:#00c896}
+.loc-out{background:rgba(239,68,68,.15);color:#ef4444}
+.loc-checking{background:rgba(255,193,7,.15);color:#ffc107}
+
+/* ── Status Badge ── */
+.badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;min-width:46px;text-align:center;display:inline-block}
+.badge-P{background:rgba(74,222,128,.15);color:var(--P)}
+.badge-A{background:rgba(248,113,113,.15);color:var(--A)}
+.badge-OD{background:rgba(255,183,77,.15);color:var(--OD)}
+.badge-WFH{background:rgba(165,180,252,.15);color:var(--WFH)}
+.badge-HD{background:rgba(251,146,60,.15);color:var(--HD)}
+.badge-L{background:rgba(248,113,113,.15);color:var(--L)}
+.badge-WO{background:rgba(100,116,139,.15);color:var(--WO)}
+.badge-nm{background:rgba(100,100,100,.15);color:#666}
+
+/* ── History Row ── */
+.hist-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px}
+.hist-row:last-child{border-bottom:none}
+
+/* ── Login ── */
+#loginPage{position:fixed;inset:0;background:var(--bg);z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+.login-logo{margin-bottom:32px;text-align:center}
+.login-logo img{height:48px;margin-bottom:12px}
+.login-logo h2{font-size:22px;font-weight:800;color:var(--accent)}
+.login-logo p{font-size:13px;color:var(--muted);margin-top:4px}
+.login-form{width:100%;max-width:360px}
+.form-label{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:block}
+.form-input{width:100%;background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;color:var(--text);font-size:15px;outline:none;transition:.15s}
+.form-input:focus{border-color:var(--accent)}
+.form-group{margin-bottom:16px}
+.login-err{color:#ef4444;font-size:13px;text-align:center;margin-bottom:12px;min-height:20px}
+
+/* ── Toast ── */
+#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#00c896;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;display:none;z-index:999;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.4)}
+
+/* ── Stat cards ── */
+.stat-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.stat-card{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center}
+.stat-num{font-size:28px;font-weight:800;color:var(--accent)}
+.stat-lbl{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* ── Section title ── */
+.sec-title{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+
+/* ── Clock ── */
+#clockBox{text-align:center;padding:8px 0 4px}
+#clockTime{font-size:32px;font-weight:800;color:var(--text);letter-spacing:2px}
+#clockDate{font-size:13px;color:var(--muted);margin-top:2px}
+
+/* ── Profile ── */
+.profile-hero{text-align:center;padding:20px 0 16px}
+.profile-avatar{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#0a0e1a;margin:0 auto 12px}
+.profile-name{font-size:18px;font-weight:700}
+.profile-sub{font-size:13px;color:var(--muted);margin-top:4px}
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);font-size:14px}
+.info-row:last-child{border-bottom:none}
+.info-label{color:var(--muted);font-size:13px}
+
+/* ── Install banner ── */
+#installBanner{background:linear-gradient(135deg,rgba(0,200,150,.15),rgba(61,139,253,.1));border:1px solid rgba(0,200,150,.3);border-radius:12px;padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px}
+#installBanner.hidden{display:none}
+
+/* scrollbar hide */
+.page::-webkit-scrollbar{display:none}
+.page{-ms-overflow-style:none;scrollbar-width:none}
+</style>
+</head>
+<body>
+
+<!-- LOGIN PAGE -->
+<div id="loginPage">
+  <div class="login-logo">
+    <img src="/static/logo.png" alt="EasySource">
+    <h2>EasySource HRMS</h2>
+    <p>workforce digitized</p>
+  </div>
+  <div class="login-form">
+    <div class="form-group">
+      <label class="form-label">Employee ID / Username</label>
+      <input class="form-input" id="l_user" type="text" placeholder="Emp ID or Username" autocomplete="username" autocapitalize="none">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <input class="form-input" id="l_pass" type="password" placeholder="Password" autocomplete="current-password">
+    </div>
+    <div class="login-err" id="l_err"></div>
+    <button class="btn-primary" id="l_btn" onclick="doLogin()">Sign In →</button>
+    <div style="text-align:center;margin-top:14px">
+      <a href="/forgot-password" style="color:var(--muted);font-size:12px">🔐 Forgot Password?</a>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app" style="display:none">
+
+  <!-- Top Bar -->
+  <div id="topbar">
+    <div class="topbar-logo">
+      <img src="/static/logo.png" alt="">
+      <span class="topbar-title">HRMS</span>
+    </div>
+    <div class="topbar-user">
+      <span id="topClock" style="font-size:12px;color:var(--muted)"></span>
+      <div class="user-avatar" id="userAvatar" onclick="showPage('profile')">?</div>
+    </div>
+  </div>
+
+  <!-- Pages -->
+  <div id="pages">
+
+    <!-- HOME TAB -->
+    <div class="page active" id="page-home">
+      <div id="clockBox">
+        <div id="clockTime">00:00:00</div>
+        <div id="clockDate">Loading...</div>
+      </div>
+
+      <!-- Install Banner -->
+      <div id="installBanner" class="hidden">
+        <div style="font-size:24px">📲</div>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:700;color:var(--accent)">Install App</div>
+          <div style="font-size:11px;color:var(--muted)">Add to home screen in one click</div>
+        </div>
+        <button onclick="installApp()" style="background:var(--accent);color:#0a0e1a;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer">Install</button>
+        <button onclick="document.getElementById('installBanner').classList.add('hidden')" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:0 4px">×</button>
+      </div>
+
+      <!-- Today's Status -->
+      <div class="card">
+        <div class="sec-title">Today's Attendance</div>
+        <div id="todayStatus" style="text-align:center;padding:8px 0">
+          <div style="font-size:13px;color:var(--muted)">Loading...</div>
+        </div>
+      </div>
+
+      <!-- Quick Stats -->
+      <div class="sec-title">This Month's Summary</div>
+      <div class="stat-row">
+        <div class="stat-card"><div class="stat-num" id="s_present" style="color:var(--P)">—</div><div class="stat-lbl">✅ Present</div></div>
+        <div class="stat-card"><div class="stat-num" id="s_absent" style="color:var(--A)">—</div><div class="stat-lbl">❌ Absent</div></div>
+        <div class="stat-card"><div class="stat-num" id="s_od" style="color:var(--OD)">—</div><div class="stat-lbl">🚗 OD</div></div>
+        <div class="stat-card"><div class="stat-num" id="s_wfh" style="color:var(--WFH)">—</div><div class="stat-lbl">🏠 WFH</div></div>
+      </div>
+
+      <!-- Quick Mark Button -->
+      <button class="btn-primary" onclick="showPage('mark')" style="margin-top:4px">
+        📍 Mark Attendance
+      </button>
+    </div>
+
+    <!-- MARK TAB -->
+    <div class="page" id="page-mark">
+      <div class="sec-title">Mark Attendance</div>
+
+      <!-- Employee info -->
+      <div class="card" id="empCard" style="display:none">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#0a0e1a" id="empInitial">?</div>
+          <div>
+            <div style="font-size:15px;font-weight:700" id="empName">—</div>
+            <div style="font-size:12px;color:var(--muted)" id="empSub">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Location panel -->
+      <div id="locPanel">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-size:13px;font-weight:700">📍 Location & Time</span>
+          <span id="liveClock" style="font-size:12px;color:var(--muted)"></span>
+        </div>
+        <div id="locBadge"><span class="loc-badge loc-checking">⏳ Fetching location...</span></div>
+        <div id="locAddr" style="font-size:11px;color:var(--muted);margin-top:4px"></div>
+        <div id="locMapLink" style="margin-top:4px"></div>
+      </div>
+
+      <!-- Status buttons -->
+      <div class="sec-title">Select Status</div>
+      <div class="status-grid">
+        <button class="status-btn s-P" onclick="selStatus('P')"><span class="icon">✅</span>Present</button>
+        <button class="status-btn s-WFH" onclick="selStatus('WFH')"><span class="icon">🏠</span>WFH</button>
+        <button class="status-btn s-OD" onclick="selStatus('OD')"><span class="icon">🚗</span>OD</button>
+        <button class="status-btn s-HD" onclick="selStatus('HD')"><span class="icon">🌓</span>Half Day</button>
+        <button class="status-btn s-L" onclick="selStatus('L')"><span class="icon">🏖️</span>Leave</button>
+        <button class="status-btn s-A" onclick="selStatus('A')"><span class="icon">❌</span>Absent</button>
+      </div>
+
+      <!-- Remark -->
+      <div style="margin-bottom:12px">
+        <label class="form-label">Remark (Optional)</label>
+        <input class="form-input" id="remarkInput" type="text" placeholder="e.g. Doctor visit, WFH approved...">
+      </div>
+
+      <button class="btn-primary" id="markBtn" onclick="markAttendance()" disabled>
+        📤 Submit Attendance
+      </button>
+
+      <div id="markResult" style="margin-top:12px;text-align:center;font-size:13px"></div>
+    </div>
+
+    <!-- HISTORY TAB -->
+    <div class="page" id="page-history">
+      <div class="sec-title">Attendance History</div>
+      <div id="histList">
+        <div style="text-align:center;padding:30px;color:var(--muted)">⏳ Loading...</div>
+      </div>
+    </div>
+
+    <!-- PROFILE TAB -->
+    <div class="page" id="page-profile">
+      <div class="profile-hero">
+        <div class="profile-avatar" id="profAvatar">?</div>
+        <div class="profile-name" id="profName">—</div>
+        <div class="profile-sub" id="profSub">—</div>
+      </div>
+
+      <div class="card">
+        <div class="sec-title">My Info</div>
+        <div id="profInfo"></div>
+      </div>
+
+      <!-- Change Password -->
+      <div class="card">
+        <div class="sec-title">Change Password</div>
+        <div class="form-group">
+          <label class="form-label">Current Password</label>
+          <input class="form-input" id="oldPw" type="password" placeholder="Current password">
+        </div>
+        <div class="form-group">
+          <label class="form-label">New Password</label>
+          <input class="form-input" id="newPw" type="password" placeholder="Min 4 characters">
+        </div>
+        <button class="btn-primary" onclick="changePw()">🔐 Update Password</button>
+        <div id="pwMsg" style="margin-top:8px;text-align:center;font-size:13px"></div>
+      </div>
+
+      <button onclick="doLogout()" style="width:100%;background:rgba(239,68,68,.1);color:#ef4444;border:1px solid rgba(239,68,68,.3);border-radius:12px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px">
+        🚪 Logout
+      </button>
+    </div>
+
+  </div><!-- /pages -->
+
+  <!-- Bottom Nav -->
+  <div id="bottomnav">
+    <button class="nav-btn active" id="nav-home" onclick="showPage('home')">
+      <i class="fa fa-home"></i>Home
+    </button>
+    <button class="nav-btn" id="nav-mark" onclick="showPage('mark')">
+      <i class="fa fa-check-circle"></i>Mark
+    </button>
+    <button class="nav-btn" id="nav-history" onclick="showPage('history')">
+      <i class="fa fa-calendar-alt"></i>History
+    </button>
+    <button class="nav-btn" id="nav-profile" onclick="showPage('profile')">
+      <i class="fa fa-user"></i>Profile
+    </button>
+  </div>
+
+</div><!-- /app -->
+
+<div id="toast"></div>
+
+<script>
+// ─────────────────────────────────────────────
+// State
+// ─────────────────────────────────────────────
+var appState = {
+  user: null, emp: null, records: [],
+  selStatus: null, geoData: null, geoStatus: 'idle',
+  installPrompt: null
+};
+
+// ─────────────────────────────────────────────
+// Init
+// ─────────────────────────────────────────────
+window.addEventListener('load', function(){
+  // Register SW
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('/static/sw.js').catch(console.warn);
+  }
+  // PWA install prompt
+  window.addEventListener('beforeinstallprompt', function(e){
+    e.preventDefault(); appState.installPrompt = e;
+    document.getElementById('installBanner').classList.remove('hidden');
+  });
+  // Check session
+  checkSession();
+  // Clock
+  startClock();
+  // Get location
+  getLocation();
+});
+
+function installApp(){
+  if(!appState.installPrompt) return;
+  appState.installPrompt.prompt();
+  appState.installPrompt.userChoice.then(function(){ appState.installPrompt = null; document.getElementById('installBanner').classList.add('hidden'); });
+}
+
+// ─────────────────────────────────────────────
+// Auth
+// ─────────────────────────────────────────────
+function checkSession(){
+  fetch('/api/me').then(function(r){ return r.json(); }).then(function(d){
+    if(d.error){ showLogin(); return; }
+    appState.user = d;
+    loadApp();
+  }).catch(showLogin);
+}
+
+function doLogin(){
+  var u = document.getElementById('l_user').value.trim();
+  var p = document.getElementById('l_pass').value.trim();
+  var err = document.getElementById('l_err');
+  var btn = document.getElementById('l_btn');
+  if(!u || !p){ err.textContent = 'Username and password are required'; return; }
+  btn.disabled = true; btn.textContent = 'Signing in...';
+  err.textContent = '';
+  var fd = new FormData();
+  fd.append('username', u); fd.append('password', p);
+  fetch('/login', {method:'POST', body:fd, redirect:'manual'}).then(function(r){
+    if(r.type === 'opaqueredirect' || r.status === 200 || r.redirected){
+      return fetch('/api/me').then(function(r2){ return r2.json(); });
+    }
+    return r.text().then(function(html){
+      if(html.includes('Invalid')) throw new Error('Invalid credentials');
+      return fetch('/api/me').then(function(r2){ return r2.json(); });
+    });
+  }).then(function(d){
+    if(d.error) throw new Error('Login failed');
+    appState.user = d;
+    loadApp();
+  }).catch(function(e){
+    err.textContent = e.message || 'Login failed. Check credentials.';
+    btn.disabled = false; btn.textContent = 'Sign In →';
+  });
+}
+
+// Enter key login
+document.getElementById('l_pass').addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
+document.getElementById('l_user').addEventListener('keydown', function(e){ if(e.key==='Enter') document.getElementById('l_pass').focus(); });
+
+function doLogout(){
+  fetch('/logout').then(function(){ showLogin(); });
+}
+
+function showLogin(){
+  document.getElementById('loginPage').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+}
+
+function loadApp(){
+  document.getElementById('loginPage').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  loadEmployeeData();
+  loadHistory();
+}
+
+// ─────────────────────────────────────────────
+// Data
+// ─────────────────────────────────────────────
+function loadEmployeeData(){
+  var u = appState.user;
+  if(!u) return;
+  // Set avatar
+  var initial = (u.name || u.username || '?')[0].toUpperCase();
+  document.getElementById('userAvatar').textContent = initial;
+  document.getElementById('profAvatar').textContent = initial;
+  document.getElementById('profName').textContent = u.name || u.username;
+  document.getElementById('profSub').textContent = u.role + (u.emp_id ? ' · ' + u.emp_id : '');
+  document.getElementById('empInitial').textContent = initial;
+  document.getElementById('empName').textContent = u.name || u.username;
+  document.getElementById('empCard').style.display = 'block';
+
+  // Fetch employee details
+  if(u.emp_id){
+    document.getElementById('empSub').textContent = u.emp_id;
+    document.getElementById('profInfo').innerHTML = '<div class="info-row"><span class="info-label">Emp ID</span><b>' + u.emp_id + '</b></div><div class="info-row"><span class="info-label">Role</span><b>' + u.role + '</b></div>';
+  }
+
+  // Load today status
+  loadTodayStatus();
+}
+
+function loadTodayStatus(){
+  var today = new Date().toISOString().split('T')[0];
+  fetch('/api/attendance/get', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({date:today})})
+  .then(function(r){ return r.json(); })
+  .then(function(records){
+    var empId = appState.user ? appState.user.emp_id : null;
+    var rec = records.find(function(r){ return r.emp_id == empId; });
+    var el = document.getElementById('todayStatus');
+    if(rec){
+      var labels = {P:'Present',A:'Absent',OD:'On Duty',WFH:'Work From Home',HD:'Half Day',L:'Leave',WO:'Week Off'};
+      var emojis = {P:'✅',A:'❌',OD:'🚗',WFH:'🏠',HD:'🌓',L:'🏖️',WO:'🔴'};
+      el.innerHTML = '<div class="badge badge-'+rec.status+'" style="font-size:15px;padding:8px 20px">'+(emojis[rec.status]||'')+'  '+(labels[rec.status]||rec.status)+'</div>'
+        + (rec.remark ? '<div style="font-size:12px;color:var(--muted);margin-top:6px">📝 ' + rec.remark + '</div>' : '')
+        + '<div style="font-size:11px;color:var(--muted);margin-top:4px">Marked at: ' + (rec.marked_at||'').substring(11,16) + '</div>';
+    } else {
+      el.innerHTML = '<div style="color:var(--muted);font-size:13px">❓ Attendance not marked today</div><button onclick="showPage(\'mark\')" style="margin-top:8px;background:rgba(0,200,150,.15);color:var(--accent);border:1px solid rgba(0,200,150,.3);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer">Mark Now →</button>';
+    }
+  });
+}
+
+function loadHistory(){
+  var today = new Date();
+  var from = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+  var to = today.toISOString().split('T')[0];
+  var empId = appState.user ? appState.user.emp_id : null;
+  if(!empId){ document.getElementById('histList').innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px">No Employee ID linked</div>'; return; }
+
+  fetch('/api/attendance/emp-history', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({emp_id:empId, from_date:from, to_date:to})})
+  .then(function(r){ return r.json(); })
+  .then(function(recs){
+    appState.records = recs;
+    // Stats
+    var c = {P:0,A:0,OD:0,WFH:0,HD:0,L:0};
+    recs.forEach(function(r){ if(c[r.status]!==undefined) c[r.status]++; });
+    document.getElementById('s_present').textContent = c.P;
+    document.getElementById('s_absent').textContent = c.A;
+    document.getElementById('s_od').textContent = c.OD;
+    document.getElementById('s_wfh').textContent = c.WFH;
+
+    // History list
+    var labels = {P:'Present',A:'Absent',OD:'On Duty',WFH:'Work From Home',HD:'Half Day',L:'Leave',WO:'Week Off'};
+    var emojis = {P:'✅',A:'❌',OD:'🚗',WFH:'🏠',HD:'🌓',L:'🏖️',WO:'🔴'};
+    if(!recs.length){ document.getElementById('histList').innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px">No records this month</div>'; return; }
+    var html = '<div class="card">';
+    recs.forEach(function(r){
+      var d = new Date(r.date);
+      var dayName = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()];
+      html += '<div class="hist-row"><div><b style="font-size:14px">' + r.date.split('-').reverse().join('-') + '</b><br><span style="font-size:11px;color:var(--muted)">' + dayName + (r.remark ? ' · ' + r.remark : '') + '</span></div><span class="badge badge-' + r.status + '">' + (emojis[r.status]||'') + ' ' + (labels[r.status]||r.status) + '</span></div>';
+    });
+    html += '</div>';
+    document.getElementById('histList').innerHTML = html;
+  }).catch(function(){
+    document.getElementById('histList').innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px">Failed to load history</div>';
+  });
+}
+
+// ─────────────────────────────────────────────
+// Navigation
+// ─────────────────────────────────────────────
+function showPage(name){
+  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('.nav-btn').forEach(function(b){ b.classList.remove('active'); });
+  var pg = document.getElementById('page-' + name);
+  if(pg) pg.classList.add('active');
+  var nb = document.getElementById('nav-' + name);
+  if(nb) nb.classList.add('active');
+  if(name === 'history') loadHistory();
+  if(name === 'home') loadTodayStatus();
+}
+
+// ─────────────────────────────────────────────
+// Mark Attendance
+// ─────────────────────────────────────────────
+function selStatus(s){
+  appState.selStatus = s;
+  document.querySelectorAll('.status-btn').forEach(function(b){ b.classList.remove('sel'); });
+  var btn = document.querySelector('.s-' + s);
+  if(btn) btn.classList.add('sel');
+  document.getElementById('markBtn').disabled = false;
+}
+
+function markAttendance(){
+  var btn = document.getElementById('markBtn');
+  btn.disabled = true; btn.textContent = '⏳ Submitting...';
+  var payload = {
+    status: appState.selStatus,
+    remark: document.getElementById('remarkInput').value.trim(),
+    check_in_time: new Date().toTimeString().substring(0,8)
+  };
+  if(appState.geoData){
+    payload.latitude = appState.geoData.latitude;
+    payload.longitude = appState.geoData.longitude;
+    payload.address = appState.geoData.address || '';
+  }
+  fetch('/api/my/mark', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)})
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    if(d.success){
+      var locMsg = d.location_status === 'in_range' ? '✅ In Range' : d.location_status === 'out_of_range' ? '⚠️ Out of Range' : '';
+      document.getElementById('markResult').innerHTML = '<div style="color:var(--P);font-weight:700;font-size:15px">✅ Attendance Saved!</div><div style="color:var(--muted);font-size:12px;margin-top:4px">' + d.time + (locMsg ? ' · ' + locMsg : '') + '</div>';
+      showToast('Attendance marked! ' + appState.selStatus);
+      loadTodayStatus();
+      loadHistory();
+    } else {
+      document.getElementById('markResult').innerHTML = '<span style="color:#ef4444">' + (d.error || 'Error') + '</span>';
+    }
+    btn.disabled = false; btn.textContent = '📤 Submit Attendance';
+  }).catch(function(){
+    document.getElementById('markResult').innerHTML = '<span style="color:#ef4444">Network error. Try again.</span>';
+    btn.disabled = false; btn.textContent = '📤 Submit Attendance';
+  });
+}
+
+// ─────────────────────────────────────────────
+// Location
+// ─────────────────────────────────────────────
+function getLocation(){
+  if(!navigator.geolocation){ updateLocUI('unsupported'); return; }
+  updateLocUI('checking');
+  navigator.geolocation.getCurrentPosition(
+    function(pos){
+      appState.geoData = {latitude:pos.coords.latitude, longitude:pos.coords.longitude, accuracy:pos.coords.accuracy};
+      updateLocUI('got');
+      fetch('https://nominatim.openstreetmap.org/reverse?lat='+pos.coords.latitude+'&lon='+pos.coords.longitude+'&format=json')
+        .then(function(r){ return r.json(); }).then(function(d){
+          if(d && d.display_name){ appState.geoData.address = d.display_name.substring(0,100); updateLocUI('got'); }
+        }).catch(function(){});
+    },
+    function(){ updateLocUI('denied'); },
+    {enableHighAccuracy:true, timeout:10000, maximumAge:60000}
+  );
+}
+
+function updateLocUI(status){
+  appState.geoStatus = status;
+  var badge = document.getElementById('locBadge');
+  var addr = document.getElementById('locAddr');
+  var mapLink = document.getElementById('locMapLink');
+  if(!badge) return;
+  var html = '', addrHtml = '', mapHtml = '';
+  if(status==='checking')   html = '<span class="loc-badge loc-checking">⏳ Fetching location...</span>';
+  if(status==='denied')     html = '<span class="loc-badge loc-out">❌ Location denied — allow in Settings</span>';
+  if(status==='unsupported')html = '<span class="loc-badge loc-out">❌ Location not supported</span>';
+  if(status==='got' && appState.geoData){
+    html = '<span class="loc-badge loc-in">✅ Location obtained · ~' + Math.round(appState.geoData.accuracy||0) + 'm accuracy</span>';
+    if(appState.geoData.address) addrHtml = '📍 ' + appState.geoData.address;
+    mapHtml = '<a href="https://maps.google.com?q='+appState.geoData.latitude+','+appState.geoData.longitude+'" target="_blank" style="font-size:11px;color:var(--accent2)">🗺 View on Map</a>';
+  }
+  badge.innerHTML = html;
+  addr.textContent = addrHtml;
+  mapLink.innerHTML = mapHtml;
+}
+
+// ─────────────────────────────────────────────
+// Clock
+// ─────────────────────────────────────────────
+function startClock(){
+  var days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  function tick(){
+    var now = new Date();
+    var h = now.getHours().toString().padStart(2,'0');
+    var m = now.getMinutes().toString().padStart(2,'0');
+    var s = now.getSeconds().toString().padStart(2,'0');
+    var timeStr = h + ':' + m + ':' + s;
+    var dateStr = days[now.getDay()] + ', ' + now.getDate() + ' ' + months[now.getMonth()] + ' ' + now.getFullYear();
+    var el = document.getElementById('clockTime');
+    var del = document.getElementById('clockDate');
+    var tc = document.getElementById('topClock');
+    var lc = document.getElementById('liveClock');
+    if(el) el.textContent = timeStr;
+    if(del) del.textContent = dateStr;
+    if(tc) tc.textContent = h + ':' + m;
+    if(lc) lc.textContent = '🕐 ' + timeStr;
+  }
+  tick();
+  setInterval(tick, 1000);
+}
+
+// ─────────────────────────────────────────────
+// Password change
+// ─────────────────────────────────────────────
+function changePw(){
+  var op = document.getElementById('oldPw').value.trim();
+  var np = document.getElementById('newPw').value.trim();
+  var msg = document.getElementById('pwMsg');
+  if(!op || !np){ msg.innerHTML = '<span style="color:#ef4444">All fields are required</span>'; return; }
+  fetch('/api/users/change_password', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({old_password:op, new_password:np})})
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    if(d.success){
+      msg.innerHTML = '<span style="color:var(--P)">✅ Password changed successfully!</span>';
+      document.getElementById('oldPw').value = '';
+      document.getElementById('newPw').value = '';
+      showToast('Password updated!');
+    } else {
+      msg.innerHTML = '<span style="color:#ef4444">' + (d.error||'Error') + '</span>';
+    }
+  });
+}
+
+// ─────────────────────────────────────────────
+// Toast
+// ─────────────────────────────────────────────
+function showToast(msg, isErr){
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = isErr ? '#ef4444' : '#00c896';
+  t.style.display = 'block';
+  setTimeout(function(){ t.style.display='none'; }, 3000);
+}
+</script>
+</body>
+</html>

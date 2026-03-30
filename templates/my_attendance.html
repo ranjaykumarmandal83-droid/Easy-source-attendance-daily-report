@@ -29,8 +29,8 @@
   {% if not emp_id %}
   <div class="card" style="text-align:center;padding:40px">
     <div style="font-size:40px;margin-bottom:12px">⚠️</div>
-    <div style="font-size:16px;font-weight:600;margin-bottom:8px">Employee ID linked nahi hai</div>
-    <div style="color:var(--muted);font-size:13px">Admin se apna Employee ID link karwao Settings mein.</div>
+    <div style="font-size:16px;font-weight:600;margin-bottom:8px">No Employee ID linked</div>
+    <div style="color:var(--muted);font-size:13px">Ask your admin to link your Employee ID in Settings.</div>
   </div>
   {% else %}
 
@@ -55,14 +55,14 @@
       <b style="font-size:13px">📍 Location & Time</b>
       <span style="font-size:13px;font-family:'JetBrains Mono',monospace;color:var(--accent)" id="locClock"></span>
     </div>
-    <div id="locStatusBadge"><span class="loc-badge loc-checking">⏳ Location fetch ho raha hai...</span></div>
+    <div id="locStatusBadge"><span class="loc-badge loc-checking">⏳ Fetching location...</span></div>
     <div id="locMapLink" style="margin-top:4px"></div>
   </div>
 
   <!-- Mark Attendance -->
   <div class="card" style="margin-bottom:18px">
     <div class="card-header">
-      <span class="card-title">📅 Aaj ki Attendance</span>
+      <span class="card-title">📅 Today's Attendance</span>
       <span style="font-size:12px;color:var(--muted)" id="todayDateLabel"></span>
     </div>
     <div id="alreadyMarked" style="display:none;padding:10px 14px;border-radius:10px;margin-bottom:14px;font-size:13px;font-weight:600"></div>
@@ -79,7 +79,7 @@
       <input class="form-control" id="remarkInput" placeholder="e.g. Client visit, Medical leave...">
     </div>
     <button class="btn btn-primary" style="width:100%;padding:14px;font-size:15px" id="markBtn" onclick="markAttendance()">
-      ✅ Attendance Mark Karo
+      ✅ Mark Attendance
     </button>
   </div>
 
@@ -110,7 +110,7 @@
         </div>
         {% endfor %}
       {% else %}
-        <div style="text-align:center;padding:30px;color:var(--muted);font-size:13px">Koi record nahi mila</div>
+        <div style="text-align:center;padding:30px;color:var(--muted);font-size:13px">No records found</div>
       {% endif %}
     </div>
   </div>
@@ -149,13 +149,13 @@ function updateLocUI(status){
   var el=document.getElementById('locStatusBadge'), mapEl=document.getElementById('locMapLink');
   if(!el) return;
   var html='';
-  if(status==='checking')    html='<span class="loc-badge loc-checking">⏳ Location fetch ho raha hai...</span>';
-  if(status==='denied')      html='<span class="loc-badge loc-out">❌ Location denied — browser settings check karo</span>';
-  if(status==='unsupported') html='<span class="loc-badge loc-out">❌ Browser location support nahi karta</span>';
+  if(status==='checking')    html='<span class="loc-badge loc-checking">⏳ Fetching location...</span>';
+  if(status==='denied')      html='<span class="loc-badge loc-out">❌ Location denied — check browser settings</span>';
+  if(status==='unsupported') html='<span class="loc-badge loc-out">❌ Browser does not support location</span>';
   if(status==='got'&&_geoData){
-    html='<span class="loc-badge loc-in">✅ Location mila — ~'+Math.round(_geoData.accuracy||0)+'m accuracy</span>';
+    html='<span class="loc-badge loc-in">✅ Location obtained — ~'+Math.round(_geoData.accuracy||0)+'m accuracy</span>';
     if(_geoData.address) html+='<div style="font-size:11px;color:var(--muted);margin-top:4px">📍 '+_geoData.address+'</div>';
-    if(mapEl) mapEl.innerHTML='<a href="https://maps.google.com?q='+_geoData.latitude+','+_geoData.longitude+'" target="_blank" style="font-size:11px;color:#3d5afe;text-decoration:none">🗺 Map pe dekho →</a>';
+    if(mapEl) mapEl.innerHTML='<a href="https://maps.google.com?q='+_geoData.latitude+','+_geoData.longitude+'" target="_blank" style="font-size:11px;color:#3d5afe;text-decoration:none">🗺 View on Map →</a>';
   }
   el.innerHTML=html;
 }
@@ -180,9 +180,9 @@ function showAlreadyMarked(status,remark){
   const cols={P:'rgba(74,222,128,.12)',WFH:'rgba(165,180,252,.12)',OD:'rgba(255,183,77,.12)',L:'rgba(248,113,113,.12)',HD:'rgba(251,146,60,.12)',WO:'rgba(148,163,184,.12)'};
   el.style.background=cols[status]||'rgba(0,200,150,.1)';
   el.style.color='var(--text)';
-  el.innerHTML='✅ Aaj already mark hai: <b>'+status+'</b>'+(remark?' — '+remark:'');
+  el.innerHTML='✅ Already marked today: <b>'+status+'</b>'+(remark?' — '+remark:'');
   el.style.display='block';
-  document.getElementById('markBtn').textContent='🔄 Update Karo';
+  document.getElementById('markBtn').textContent='🔄 Update';
 }
 
 function selectStatus(s){
@@ -193,7 +193,7 @@ function selectStatus(s){
 }
 
 async function markAttendance(){
-  if(!selectedStatus){ showToast('Pehle status select karo','error'); return; }
+  if(!selectedStatus){ showToast('Please select a status first','error'); return; }
   const btn=document.getElementById('markBtn');
   const remark=document.getElementById('remarkInput').value.trim();
   btn.disabled=true; btn.textContent='⏳ Saving...';
@@ -206,7 +206,7 @@ async function markAttendance(){
     setTimeout(()=>location.reload(),1200);
   } else {
     showToast(res.error||'Error','error');
-    btn.disabled=false; btn.textContent='🔄 Update Karo';
+    btn.disabled=false; btn.textContent='🔄 Update';
   }
 }
 

@@ -5,7 +5,7 @@
   <div class="card-body d-flex align-items-center justify-content-between" style="background:#161b27">
     <div>
       <h5 class="mb-1" style="color:#e6edf3">📍 Attendance Location Range</h5>
-      <p class="mb-0 small" style="color:#8b949e">Employee attendance ke liye allowed GPS location range set karo</p>
+      <p class="mb-0 small" style="color:#8b949e">Set the allowed GPS location range for employee attendance</p>
     </div>
     <div class="d-flex gap-2">
       <a href="/location-settings" class="btn btn-success btn-sm">🏢 Office Locations</a>
@@ -99,12 +99,12 @@
       <span class="card-title">📧 Email Settings (SMTP)</span>
     </div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:12px">
-      Password change hone par user ko email notification milega. Koi bhi email provider use kar sakte ho.
+      Users will receive an email notification when their password is changed. Any email provider can be used.
     </div>
 
     <!-- Quick Presets -->
     <div style="margin-bottom:14px">
-      <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:8px">⚡ Quick Preset Select Karo:</div>
+      <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:8px">⚡ Quick Preset:</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px">
         <button class="btn btn-secondary btn-sm" onclick="setPreset('gmail')">📧 Gmail</button>
         <button class="btn btn-secondary btn-sm" onclick="setPreset('outlook')">📧 Outlook / Hotmail</button>
@@ -155,17 +155,17 @@
   <div class="card">
     <div class="card-header"><span class="card-title">📖 User Roles Guide</span></div>
     <div style="font-size:12.5px;line-height:2">
-      <div><span class="role-badge role-admin">admin</span> &nbsp;Sab kuch access — Users, Settings</div>
-      <div><span class="role-badge role-subadmin">subadmin</span> &nbsp;Employees + Attendance manage</div>
-      <div><span class="role-badge role-user">user</span> &nbsp;Attendance dekh sakte hain, sirf WhatsApp</div>
-      <div><span class="role-badge role-viewer">viewer</span> &nbsp;Sirf read-only access</div>
+      <div><span class="role-badge role-admin">admin</span> &nbsp;Full access — Users, Settings</div>
+      <div><span class="role-badge role-subadmin">subadmin</span> &nbsp;Manage Employees + Attendance</div>
+      <div><span class="role-badge role-user">user</span> &nbsp;Can view attendance, WhatsApp only</div>
+      <div><span class="role-badge role-viewer">viewer</span> &nbsp;Read-only access</div>
     </div>
     <hr style="border-color:var(--border);margin:14px 0">
     <div style="font-size:12px;color:var(--muted)">
       <b style="color:var(--text)">📱 WhatsApp Permission:</b><br>
-      Jo users ka "WhatsApp" toggle ON hai, woh sirf WhatsApp page use kar sakte hain.<br><br>
+      Users with the "WhatsApp" toggle ON can only access the WhatsApp page.<br><br>
       <b style="color:var(--text)">🔗 Emp. ID Link:</b><br>
-      User ko employee se link karo taaki unka profile dikhaye.
+      Link a user to an employee so their profile is displayed.
     </div>
   </div>
 
@@ -228,8 +228,8 @@
       </div>
     </div>
     <div id="editPassRow" style="display:none" class="form-group">
-      <label>New Password (khali chhodo agar change nahi karna)</label>
-      <input class="form-control" id="u_new_password" type="password" placeholder="Naya password">
+      <label>New Password (leave blank to keep unchanged)</label>
+      <input class="form-control" id="u_new_password" type="password" placeholder="New password">
     </div>
     <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:10px">
       <button class="btn btn-secondary" onclick="closeModal('userModal')">Cancel</button>
@@ -243,9 +243,9 @@
   <div class="modal" style="max-width:600px">
     <h3 id="headModalTitle">👑 Create Head</h3>
     <div class="form-group">
-      <label>Employee Select Karo *</label>
+      <label>Select Employee *</label>
       <select class="form-control" id="h_emp_id" onchange="onHeadEmpChange()">
-        <option value="">-- Employee Select Karo --</option>
+        <option value="">-- Select Employee --</option>
       </select>
       <div id="h_emp_info" style="margin-top:8px;font-size:12px;color:var(--accent)"></div>
     </div>
@@ -291,31 +291,31 @@
 const PRESETS = {
   gmail: {
     host: 'smtp.gmail.com', port: 587,
-    hint: '📧 <b>Gmail:</b> 2-Step Verification ON karo → Google Account → Security → App Passwords → "HRMS" naam se password banao → woh 16-char password yahan daalo.'
+    hint: '📧 <b>Gmail:</b> Enable 2-Step Verification → Google Account → Security → App Passwords → create a password named "HRMS" → enter the 16-char password here.'
   },
   outlook: {
     host: 'smtp-mail.outlook.com', port: 587,
-    hint: '📧 <b>Outlook/Hotmail:</b> Apna normal Outlook password use karo. Agar 2FA hai to App Password banao Microsoft account settings se.'
+    hint: '📧 <b>Outlook/Hotmail:</b> Use your normal Outlook password. If 2FA is enabled, create an App Password from Microsoft account settings.'
   },
   yahoo: {
     host: 'smtp.mail.yahoo.com', port: 587,
-    hint: '📧 <b>Yahoo Mail:</b> Yahoo Account Security → Generate App Password → "HRMS" → woh password yahan daalo.'
+    hint: '📧 <b>Yahoo Mail:</b> Yahoo Account Security → Generate App Password → "HRMS" → enter that password here.'
   },
   zoho: {
     host: 'smtp.zoho.in', port: 587,
-    hint: '📧 <b>Zoho Mail:</b> Zoho India server. Normal password ya App-specific password use karo.'
+    hint: '📧 <b>Zoho Mail:</b> Zoho India server. Use your normal password or an App-specific password.'
   },
   office365: {
     host: 'smtp.office365.com', port: 587,
-    hint: '⚠️ <b>Office 365 (587):</b> <u>SMTP Auth enable karna zaroori hai</u> → Microsoft 365 Admin Center → Settings → Mail → Authenticated SMTP ON karo. Phir normal password ya App Password use karo.'
+    hint: '⚠️ <b>Office 365 (587):</b> <u>SMTP Auth must be enabled</u> → Microsoft 365 Admin Center → Settings → Mail → turn ON Authenticated SMTP. Then use your normal password or App Password.'
   },
   outlook_ssl: {
     host: 'smtp.office365.com', port: 465,
-    hint: '🔒 <b>Office 365 SSL (465):</b> Agar 587 par "Authentication unsuccessful" aa raha hai to port 465 SSL try karo. SMTP Auth center mein enable rehna chahiye.'
+    hint: '🔒 <b>Office 365 SSL (465):</b> If you get "Authentication unsuccessful" on port 587, try port 465 SSL. SMTP Auth must remain enabled in the admin center.'
   },
   custom: {
     host: '', port: 587,
-    hint: '⚙️ <b>Company/Custom Server:</b> Apni company ka SMTP server host aur port fill karo. IT team se details lo.'
+    hint: '⚙️ <b>Company/Custom Server:</b> Enter your company SMTP server host and port. Get the details from your IT team.'
   }
 };
 
@@ -368,7 +368,7 @@ async function saveUser() {
     ? (document.getElementById('u_new_password').value.trim())
     : (document.getElementById('u_password').value.trim());
 
-  if (!isEdit && !pw) { showToast('Password zaroori hai', 'error'); return; }
+  if (!isEdit && !pw) { showToast('Password is required', 'error'); return; }
 
   const data = {
     name:         document.getElementById('u_name').value.trim(),
@@ -379,7 +379,7 @@ async function saveUser() {
     emp_id:       document.getElementById('u_emp_id').value,
     can_whatsapp: document.getElementById('u_can_whatsapp').checked,
   };
-  if (!data.username) { showToast('Username zaroori hai', 'error'); return; }
+  if (!data.username) { showToast('Username is required', 'error'); return; }
   if (pw) data.password = pw;
   if (isEdit) data.id = editingUserId;
 
@@ -394,7 +394,7 @@ async function saveUser() {
 }
 
 async function deleteUser(id, username) {
-  if (!confirm(`"${username}" ko delete karna chahte ho?`)) return;
+  if (!confirm(`Are you sure you want to delete "${username}"?`)) return;
   const res = await api('/api/users/delete', {id});
   if (res.success) { showToast('User deleted'); setTimeout(() => location.reload(), 800); }
 }
@@ -421,7 +421,7 @@ async function saveEmailSettings() {
 }
 
 async function testEmail() {
-  const to = prompt('Test email kis par bhejein?', document.getElementById('smtp_user').value);
+  const to = prompt('Send test email to?', document.getElementById('smtp_user').value);
   if (!to) return;
   await saveEmailSettings();
   const res = await api('/api/email_settings/test', {to_email: to});
@@ -429,7 +429,7 @@ async function testEmail() {
   el.style.display = 'block';
   if (res.success) {
     el.style.background = 'rgba(0,200,150,.1)'; el.style.color = 'var(--accent)';
-    el.textContent = '✅ Test email sent! Inbox check karo.';
+    el.textContent = '✅ Test email sent! Check your inbox.';
   } else {
     el.style.background = 'rgba(239,68,68,.1)'; el.style.color = '#f87171';
     el.textContent = '❌ Failed: ' + res.message;
@@ -449,7 +449,7 @@ async function loadHeads() {
   const heads = await res.json();
   const el = document.getElementById('headsList');
   if (!heads.length) {
-    el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:24px;font-size:13px">Koi Head nahi bana abhi tak. "➕ Create Head" dabao.</div>';
+    el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:24px;font-size:13px">No Heads created yet. Click "➕ Create Head" to add one.</div>';
     return;
   }
   el.innerHTML = heads.map(h => `
@@ -496,7 +496,7 @@ async function loadHeads() {
                     border:1px solid rgba(0,200,150,.22)">
                     ${e.emp_id} – ${e.name}
                   </span>`).join('')
-              : '<span style="font-size:11px;color:var(--muted)">Koi link nahi</span>'
+              : '<span style="font-size:11px;color:var(--muted)">No employees linked</span>'
             }
           </div>
         </div>
@@ -527,7 +527,7 @@ async function openCreateHead() {
 
   // Populate employee dropdown
   const sel = document.getElementById('h_emp_id');
-  sel.innerHTML = '<option value="">-- Employee Select Karo --</option>' +
+  sel.innerHTML = '<option value="">-- Select Employee --</option>' +
     allEmployees_forHead.map(e =>
       `<option value="${e.emp_id}">${e.emp_id} – ${e.name} (${e.department || '—'})</option>`
     ).join('');
@@ -566,7 +566,7 @@ function renderHeadEmpList() {
       <span style="flex:1;font-size:12.5px">${e.emp_id} – <b>${e.name}</b></span>
       <span style="font-size:11px;color:var(--muted)">${e.department || ''}</span>
     </label>`;
-  }).join('') || '<div style="color:var(--muted);font-size:12px;padding:8px">Koi result nahi</div>';
+  }).join('') || '<div style="color:var(--muted);font-size:12px;padding:8px">No results found</div>';
 
   document.getElementById('h_linked_count').textContent = headSelectedEmpIds.size + ' selected';
 }
@@ -586,13 +586,13 @@ function toggleHeadEmp(empId, checked, label) {
 
 async function saveHead() {
   const emp_id = document.getElementById('h_emp_id').value;
-  if (!emp_id) { showToast('Employee select karna zaroori hai', 'error'); return; }
+  if (!emp_id) { showToast('Please select an employee', 'error'); return; }
   const res = await api('/api/heads/create', {
     emp_id,
     linked_emp_ids: [...headSelectedEmpIds]
   });
   if (res.success) {
-    showToast(res.message || 'Head create ho gaya! 👑');
+    showToast(res.message || 'Head created! 👑');
     closeModal('headModal');
     loadHeads();
   } else {
@@ -601,10 +601,10 @@ async function saveHead() {
 }
 
 async function deleteHead(headId, name) {
-  if (!confirm(`"${name}" ko Head se remove karna chahte ho?\nInka role wapis subadmin ho jayega.`)) return;
+  if (!confirm(`Are you sure you want to remove "${name}" as Head?\nTheir role will revert to subadmin.`)) return;
   const res = await api('/api/heads/delete', { head_id: headId });
   if (res.success) {
-    showToast(`"${name}" Head se remove ho gaya`);
+    showToast(`"${name}" removed as Head`);
     loadHeads();
   }
 }
@@ -667,7 +667,7 @@ async function saveLinkEmployees() {
     emp_ids: [...linkSelectedEmpIds]
   });
   if (res.success) {
-    showToast(`✅ ${linkSelectedEmpIds.size} employees link ho gaye!`);
+    showToast(`✅ ${linkSelectedEmpIds.size} employees linked!`);
     closeModal('linkModal');
     loadHeads();
   } else {

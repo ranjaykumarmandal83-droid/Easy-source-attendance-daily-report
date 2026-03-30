@@ -307,7 +307,7 @@ def admin_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         if 'user_id' not in session:
-            # API request ke liye JSON return karo, page request ke liye redirect
+            # Return JSON for API requests, redirect for page requests
             if request.is_json or request.path.startswith('/api/'):
                 return jsonify({'error': 'Session expired. Please login again.', 'redirect': '/login'}), 401
             return redirect(url_for('login'))
@@ -346,7 +346,7 @@ def login():
             if u['role'] == 'user':
                 return redirect(url_for('my_attendance'))
             return redirect(url_for('dashboard'))
-        return render_template('login.html', error='Invalid credentials. Username/Password check karo.')
+        return render_template('login.html', error='Invalid credentials. Please check your Username/Password.')
     return render_template('login.html')
 
 @app.route('/forgot-password', methods=['GET', 'POST'])
@@ -368,15 +368,15 @@ def forgot_password():
             <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:24px;background:#f9f9f9;border-radius:12px">
               <h2 style="color:#1a3a5c">🔐 Password Reset</h2>
               <p>Namaste <b>{u['name'] or u['username']}</b>,</p>
-              <p>Neeche diye link se apna password reset karo (2 ghante valid hai):</p>
+              <p>Click the link below to reset your password (valid for 2 hours):</p>
               <a href="{reset_url}" style="display:inline-block;padding:12px 24px;background:#00c896;color:#fff;border-radius:8px;text-decoration:none;font-weight:bold;margin:16px 0">🔗 Reset Password</a>
-              <p style="color:#888;font-size:12px">Agar aapne yeh request nahi ki toh ignore karein.</p>
+              <p style="color:#888;font-size:12px">If you did not request this, please ignore this email.</p>
               <p style="color:#888;font-size:12px">— EasySource HRMS</p>
             </div>"""
             send_email(u['email'], '🔐 HRMS Password Reset', html)
             msg = ('success', f'Reset link {email} par bhej diya gaya hai.')
         else:
-            msg = ('error', 'Yeh email registered nahi hai.')
+            msg = ('error', 'This email is not registered.')
         conn.close()
     return render_template('forgot_password.html', msg=msg)
 
@@ -389,7 +389,7 @@ def reset_password(token):
     ).fetchone()
     if not rec:
         conn.close()
-        return render_template('forgot_password.html', msg=('error', 'Link expired ya invalid hai. Dobara try karo.'))
+        return render_template('forgot_password.html', msg=('error', 'Link has expired or is invalid. Please try again.'))
     error = None
     if request.method == 'POST':
         new_pw = request.form.get('new_password','').strip()
@@ -401,7 +401,7 @@ def reset_password(token):
             conn.commit()
             conn.close()
             return render_template('forgot_password.html',
-                                   msg=('success', '✅ Password reset ho gaya! Ab login karo.'))
+                                   msg=('success', '✅ Password has been reset! You can now log in.'))
     conn.close()
     return render_template('reset_password.html', token=token, error=error)
 
@@ -606,7 +606,7 @@ def api_bulk_employees():
         data = []
 
     if not data:
-        return jsonify({'error': 'Koi data nahi mila. Sahi Excel format use karo.', 'added': 0}), 400
+        return jsonify({'error': 'No data found. Please use the correct Excel format.', 'added': 0}), 400
 
     conn = get_db()
     added = 0
@@ -826,7 +826,7 @@ def whatsapp():
         u = conn2.execute('SELECT can_whatsapp FROM users WHERE id=?', (session['user_id'],)).fetchone()
         conn2.close()
         if not u or not u['can_whatsapp']:
-            return render_template('error.html', message='WhatsApp access ki permission nahi hai. Admin se contact karein.') if os.path.exists('templates/error.html') else ('⛔ Access Denied', 403)
+            return render_template('error.html', message='You do not have permission to access WhatsApp. Please contact Admin.') if os.path.exists('templates/error.html') else ('⛔ Access Denied', 403)
     conn = get_db()
     messages = rows(conn.execute('SELECT * FROM whatsapp_messages ORDER BY created_at DESC LIMIT 50').fetchall())
     settings = row(conn.execute('SELECT * FROM whatsapp_settings LIMIT 1').fetchone())
@@ -1268,12 +1268,12 @@ def api_create_head():
     existing = conn.execute('SELECT id FROM heads WHERE emp_id=?', (emp_id,)).fetchone()
     if existing:
         conn.close()
-        return jsonify({'error': f'"{emp_id}" already Head hai. Duplicate nahi ban sakta!'}), 400
+        return jsonify({'error': f'"{emp_id}" is already a Head. Cannot add duplicate!'}), 400
     # Get employee info
     emp = conn.execute('SELECT * FROM employees WHERE emp_id=?', (emp_id,)).fetchone()
     if not emp:
         conn.close()
-        return jsonify({'error': 'Employee nahi mila'}), 404
+        return jsonify({'error': 'Employee not found'}), 404
     emp = dict(emp)
     # Ensure user account exists for this employee
     user = conn.execute('SELECT id FROM users WHERE emp_id=?', (emp_id,)).fetchone()
@@ -1354,7 +1354,7 @@ def api_save_roster():
         ).fetchall()]
         if data['emp_id'] not in allowed:
             conn.close()
-            return jsonify({'error': 'Aap sirf apne linked employees ka roster save kar sakte ho'}), 403
+            return jsonify({'error': 'You can only save roster for your linked employees'}), 403
     existing = conn.execute('SELECT id FROM roster WHERE emp_id=? AND week_start=?',
                             (data['emp_id'], data['week_start'])).fetchone()
     days = ['mon','tue','wed','thu','fri','sat','sun']
@@ -1402,7 +1402,7 @@ def send_email(to_email, subject, body_html):
         return True, 'Sent'
     except smtplib.SMTPAuthenticationError as e:
         if 'office365' in cfg['smtp_host'].lower() or 'outlook' in cfg['smtp_host'].lower():
-            return False, 'Office 365 Auth fail: SMTP Auth feature enable karo → M365 Admin Center → Settings → Mail → Authenticated SMTP'
+            return False, 'Office 365 Auth failed: Enable SMTP Auth → M365 Admin Center → Settings → Mail → Authenticated SMTP'
         return False, f'Authentication failed: {str(e)}'
     except Exception as e:
         return False, str(e)
@@ -1493,13 +1493,13 @@ def api_change_password():
         html = f"""
         <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:24px;background:#f9f9f9;border-radius:12px">
           <h2 style="color:#1a3a5c;margin-bottom:8px">🔐 Password Changed</h2>
-          <p style="color:#444">Namaste <b>{u['name'] or u['username']}</b>,</p>
-          <p style="color:#444">Aapka HRMS password successfully change ho gaya hai.</p>
+          <p style="color:#444">Hello <b>{u['name'] or u['username']}</b>,</p>
+          <p style="color:#444">Your HRMS password has been changed successfully.</p>
           <div style="background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:16px;margin:16px 0">
             <b>Username:</b> {u['username']}<br>
             <b>Time:</b> {datetime.now().strftime('%d %b %Y, %I:%M %p')}
           </div>
-          <p style="color:#888;font-size:12px">Agar aapne yeh change nahi kiya toh turant admin se contact karein.</p>
+          <p style="color:#888;font-size:12px">If you did not make this change, please contact your admin immediately.</p>
           <p style="color:#888;font-size:12px">— EasySource HRMS</p>
         </div>"""
         send_email(u['email'], '🔐 HRMS Password Changed', html)
@@ -2043,20 +2043,20 @@ LOCATION_SETTINGS_TEMPLATE = """
 </head>
 <body>
 <div class="page-card">
+  <a href="/settings" class="back-btn" style="display:inline-flex;align-items:center;gap:6px;margin-bottom:16px">← Back to Settings</a>
   <div class="page-hdr">
     <div class="page-title">📍 Attendance Location Range Settings</div>
     <div class="d-flex gap-2">
       <button class="btn-add" onclick="addRow()">+ Add Office</button>
-      <a href="/settings" class="back-btn">← Settings</a>
     </div>
   </div>
 
   <div class="info-box">
-    💡 <b style="color:var(--text)">Kaise use karein:</b><br>
-    Har office/location ke liye <b>latitude, longitude aur radius</b> set karo.<br>
-    Employee jab attendance mark kare aur uski location is range ke andar ho → <b style="color:#00c896">✅ In Range</b><br>
-    Bahar ho → <b style="color:#ef4444">❌ Out of Range</b> (attendance tab bhi mark hogi, sirf flag lagega)<br><br>
-    📌 Google Maps pe jaao → apni office pe right-click → <b>"What's here?"</b> → coordinates copy karo
+    💡 <b style="color:var(--text)">How to use:</b><br>
+    Set <b>latitude, longitude and radius</b> for each office/location.<br>
+    When an employee marks attendance and their location is within the range → <b style="color:#00c896">✅ In Range</b><br>
+    Outside range → <b style="color:#ef4444">❌ Out of Range</b> (attendance is still marked, only a flag is added)<br><br>
+    📌 Open Google Maps → right-click on your office → <b>"What's here?"</b> → copy the coordinates
   </div>
 
   <table>
@@ -2091,7 +2091,7 @@ LOCATION_SETTINGS_TEMPLATE = """
   </table>
 
   {% if not locs %}
-  <div style="text-align:center;padding:30px;color:var(--muted)">Koi location set nahi hai. "+ Add Office" karo.</div>
+  <div style="text-align:center;padding:30px;color:var(--muted)">No locations set yet. Click "+ Add Office" to add one.</div>
   {% endif %}
 </div>
 
@@ -2115,7 +2115,7 @@ async function save(lid){
     radius_meters:parseInt(document.getElementById('rad_'+lid).value)||200,
     is_active:document.getElementById('act_'+lid).checked?1:0
   };
-  if(!data.office_name||!data.latitude||!data.longitude){showToast('Sab fields fill karo!',false);return;}
+  if(!data.office_name||!data.latitude||!data.longitude){showToast('Please fill all required fields!',false);return;}
   var res=await fetch('/api/location/settings/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
   var d=await res.json();
   d.success?showToast('✅ Saved: '+data.office_name):showToast('❌ Error: '+(d.error||''),false);
@@ -2155,7 +2155,7 @@ async function saveNew(lid){
     radius_meters:parseInt(document.getElementById('rad_'+lid).value)||200,
     is_active:document.getElementById('act_'+lid).checked?1:0
   };
-  if(!data.office_name||!data.latitude||!data.longitude){showToast('Sab fields fill karo!',false);return;}
+  if(!data.office_name||!data.latitude||!data.longitude){showToast('Please fill all required fields!',false);return;}
   var res=await fetch('/api/location/settings/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
   var d=await res.json();
   if(d.success){showToast('✅ Saved! Reloading...');setTimeout(()=>location.reload(),1000);}
@@ -2199,25 +2199,25 @@ tr:hover td{background:rgba(255,255,255,.02)}
 </head>
 <body>
 <div class="page-card">
+  <a href="/settings" class="back-btn" style="display:inline-flex;align-items:center;gap:6px;margin-bottom:16px">← Back to Settings</a>
 
   <!-- Header -->
   <div class="d-flex justify-content-between align-items-start mb-3">
     <div>
       <div class="page-title">👤 Employee-wise Location Settings</div>
-      <div style="font-size:13px;color:var(--muted)">Har employee ka location mode aur WFH location set karo</div>
+      <div style="font-size:13px;color:var(--muted)">Set location mode and WFH coordinates for each employee</div>
     </div>
     <div class="d-flex gap-2">
       <a href="/location-settings" class="back-btn">🏢 Office Locations</a>
-      <a href="/settings" class="back-btn">← Settings</a>
     </div>
   </div>
 
   <!-- Info box -->
   <div class="info-box">
-    🟢 <b style="color:#00c896">Office</b> — Sirf office range ke andar mark kar sakta hai<br>
-    🔵 <b style="color:#7c9fff">Home / WFH</b> — Sirf ghar ke coordinates ke andar mark kar sakta hai (neeche set karo)<br>
-    🟡 <b style="color:#ffb74d">Field / Any</b> — Koi restriction nahi, kahin se bhi mark kar sakta hai<br>
-    <span style="font-size:12px">📌 <b>Home coordinates:</b> Employee Google Maps pe apna ghar dhundhe → right-click → coordinates copy kare aur yahan paste karo</span>
+    🟢 <b style="color:#00c896">Office</b> — Can only mark attendance within office range<br>
+    🔵 <b style="color:#7c9fff">Home / WFH</b> — Can only mark attendance within home coordinates (set below)<br>
+    🟡 <b style="color:#ffb74d">Field / Any</b> — No restriction, can mark attendance from anywhere<br>
+    <span style="font-size:12px">📌 <b>Home coordinates:</b> Employee opens Google Maps → finds their home → right-click → copy coordinates and paste here</span>
   </div>
 
   <!-- Bulk action -->
@@ -2315,7 +2315,7 @@ function filterTable(){
 function renderRows(list){
   var tbody = document.getElementById('empBody');
   if(!list.length){
-    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--muted)">Koi employee nahi mila</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--muted)">No employees found</td></tr>';
     return;
   }
   tbody.innerHTML = list.map(function(e){
@@ -2382,7 +2382,7 @@ function updateSelCount(){
 
 async function bulkApply(){
   var ids = Array.from(document.querySelectorAll('.emp-chk:checked')).map(function(c){ return c.value; });
-  if(!ids.length){ showToast('Koi employee select nahi kiya!', false); return; }
+  if(!ids.length){ showToast('No employees selected!', false); return; }
   var mode = document.getElementById('bulkMode').value;
   var res = await fetch('/api/employees/location/bulk-save', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({emp_ids:ids, location_mode:mode})});
   var d   = await res.json();
@@ -2476,7 +2476,7 @@ def api_my_mark():
         conn2.close()
         u = row2['emp_id'] if row2 else None
     if not u:
-        return jsonify({'error': 'Employee ID linked nahi hai. Admin se contact karo.'}), 400
+        return jsonify({'error': 'No Employee ID linked to your account. Please contact Admin.'}), 400
 
     data    = request.json
     today   = date.today().isoformat()
@@ -2565,6 +2565,10 @@ def profile():
 @login_required
 def mobile():
     return render_template('mobile_attendance.html')
+
+@app.route('/app')
+def app_mobile():
+    return render_template('app_mobile.html')
 
 @app.route('/api/me')
 def api_me():
@@ -2792,6 +2796,11 @@ def api_roster_apply_pattern():
     return jsonify({'success': True, 'saved': saved, 'skipped': skipped,
                     'first_sat': first_sat.strftime('%d %b'), 'last_sat': last_sat.strftime('%d %b')})
 
+
+@app.route('/process-chart')
+@login_required
+def process_chart():
+    return render_template('process_chart.html')
 
 if __name__ == '__main__':
     os.makedirs('database', exist_ok=True)

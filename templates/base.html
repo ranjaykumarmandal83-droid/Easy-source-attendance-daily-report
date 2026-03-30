@@ -165,6 +165,11 @@ select.form-control option{background:var(--card)}
 .roster-fly-item i { font-size:12px; width:16px; text-align:center; opacity:.8; }
 .roster-fly-item:hover i, .roster-fly-item.rfi-active i { opacity:1; }
 </style>
+<link rel="manifest" href="/static/manifest.json">
+<meta name="theme-color" content="#0a0e1a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
 <body>
 <aside class="sidebar" id="sidebar">
@@ -255,7 +260,7 @@ select.form-control option{background:var(--card)}
 </main>
 
 <!-- THEME PICKER BUTTON -->
-<button class="theme-btn" onclick="toggleThemePanel()" title="Theme Change Karo">🎨</button>
+<button class="theme-btn" onclick="toggleThemePanel()" title="Change Theme">🎨</button>
 <div class="theme-panel" id="themePanel">
   <h4>🎨 Colour Theme</h4>
   <div class="theme-swatches" id="themeSwatches"></div>
@@ -380,6 +385,13 @@ applyTheme(savedTheme);
     });
   }
 })();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/static/sw.js').catch(function(){});
+  });
+}
 </script>
 </body>
 </html>

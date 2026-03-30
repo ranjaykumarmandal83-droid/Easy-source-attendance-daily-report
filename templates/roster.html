@@ -242,7 +242,7 @@
 
     <!-- Employee list -->
     <div id="notifyList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px">
-      <div style="color:var(--r-muted);font-size:13px;padding:20px">Week select karo aur Load karo</div>
+      <div style="color:var(--r-muted);font-size:13px;padding:20px">Select a week and load</div>
     </div>
   </div>
 
@@ -271,11 +271,11 @@
         </div>
 
         <div style="background:rgba(0,200,150,.07);border:1px solid rgba(0,200,150,.18);border-radius:10px;padding:14px;margin-bottom:20px;font-size:13px;color:var(--r-muted);line-height:2">
-          📋 <b style="color:var(--r-text)">Excel Report mein hoga:</b><br>
-          <span>✅ Monthly Roster — har employee ke har din ka shift</span><br>
-          <span>✅ Employee Summary — Working / WO / WFH / OD / Leave count</span><br>
+          📋 <b style="color:var(--r-text)">The Excel Report will include:</b><br>
+          <span>✅ Monthly Roster — daily shift for every employee</span><br>
+          <span>✅ Employee Summary — Working / WO / WFH / OD / Leave counts</span><br>
           <span>✅ Department Summary — department-wise totals</span><br>
-          <span>✅ Shift Legend — color codes ka matlab</span>
+          <span>✅ Shift Legend — meaning of color codes</span>
         </div>
 
         <button class="btn-3d-green w-100" id="downloadReportBtn" onclick="downloadRosterReport()" style="padding:12px;font-size:15px;border:none;cursor:pointer;border-radius:8px">
@@ -422,7 +422,7 @@
       <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <div>
           <div class="section-hdr">👥 Employee Mapping</div>
-          <small class="text-muted">Har employee ko ek Roster Template assign karo</small>
+          <small class="text-muted">Assign a Roster Template to each employee</small>
         </div>
         <div class="d-flex gap-2 flex-wrap">
           <input type="text" id="mapSearch" class="form-control form-control-sm rc-input" placeholder="Search employee..." style="width:180px" oninput="renderMappingTable()">
@@ -462,7 +462,7 @@
             </tr>
           </thead>
           <tbody id="mappingTableBody">
-            <tr><td colspan="14" class="text-center py-4 text-muted">Tab open karo - data load ho jayega</td></tr>
+            <tr><td colspan="14" class="text-center py-4 text-muted">Open tab — data will load</td></tr>
           </tbody>
         </table>
       </div>
@@ -513,7 +513,7 @@
       </div>
       <div class="modal-body">
         <input type="hidden" id="assignEmpId">
-        <label class="form-label fw-semibold">Template Select karo</label>
+        <label class="form-label fw-semibold">Select Template</label>
         <select id="assignTemplateSelect" class="form-select mb-3" onchange="showAssignPreview()"><option value="">-- Select --</option></select>
         <div id="assignPreview" class="d-flex gap-3 flex-wrap text-center mt-1"></div>
       </div>
@@ -571,10 +571,10 @@
         <button type="button" class="btn-close btn-close-white" onclick="hideModal(this.closest('.modal').id)"></button>
       </div>
       <div class="modal-body">
-        <div class="alert alert-info py-2 small mb-3">Employee mappings ko ek week ke roster mein copy karega.</div>
+        <div class="alert alert-info py-2 small mb-3">Copies employee mappings into one week's roster.</div>
         <div class="mb-3"><label class="form-label fw-semibold">Week Start (Monday)</label><input type="date" id="applyWeekStart" class="form-control"></div>
         <div class="form-check mb-2"><input class="form-check-input" type="checkbox" id="applyOverwrite" checked><label class="form-check-label">Overwrite existing</label></div>
-        <div class="form-check"><input class="form-check-input" type="checkbox" id="applySelectedOnly"><label class="form-check-label">Sirf selected employees</label></div>
+        <div class="form-check"><input class="form-check-input" type="checkbox" id="applySelectedOnly"><label class="form-check-label">Selected employees only</label></div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="hideModal(this.closest('.modal').id)">Cancel</button>
@@ -674,7 +674,7 @@ function renderRosterTable(){
     return true;
   });
   const tbody=document.getElementById('rosterBody');
-  if(!filtered.length){tbody.innerHTML='<tr><td colspan="11" class="text-center py-4 text-muted">Koi employee nahi mila</td></tr>';return;}
+  if(!filtered.length){tbody.innerHTML='<tr><td colspan="11" class="text-center py-4 text-muted">No employees found</td></tr>';return;}
   tbody.innerHTML=filtered.map(e=>{
     const r=rosterData[e.emp_id]||{};
     return '<tr data-emp="'+e.emp_id+'"><td><small class="text-muted">'+e.emp_id+'</small></td><td><b>'+e.name+'</b><br><small class="text-muted">'+(e.designation||'')+'</small></td><td><small>'+(e.department||'')+'</small></td>'+
@@ -751,7 +751,7 @@ async function applyMonthRoster(){
   const mo=+document.getElementById('patternMonth').value;
   const rule=getSatRule();
   const overwrite=document.getElementById('patternOverwrite').checked;
-  if(!yr||!mo){ alert('Year aur Month select karo!'); return; }
+  if(!yr||!mo){ alert('Please select Year and Month!'); return; }
 
   const btn=document.querySelector('[onclick="applyMonthRoster()"]');
   btn.disabled=true; btn.textContent='⏳ Applying...';
@@ -793,13 +793,13 @@ function downloadRosterReport(){
   const yr = document.getElementById('reportYear').value;
   const mo = document.getElementById('reportMonth').value;
   const status = document.getElementById('reportStatus');
-  if(!yr || !mo){ alert('Year aur Month select karo!'); return; }
+  if(!yr || !mo){ alert('Please select Year and Month!'); return; }
   // Direct GET download - Chrome HTTP pe blob block karta hai
   status.innerHTML = '<div style="color:#00c896;font-size:13px">⏳ Generating report...</div>';
   const url = '/api/roster/report/download?year='+yr+'&month='+mo+'&t='+Date.now();
   window.location.href = url;
   setTimeout(()=>{
-    status.innerHTML = '<div style="background:rgba(0,200,150,.1);border:1px solid rgba(0,200,150,.3);border-radius:8px;padding:10px;color:#00c896;font-size:13px">✅ Report download ho gaya!</div>';
+    status.innerHTML = '<div style="background:rgba(0,200,150,.1);border:1px solid rgba(0,200,150,.3);border-radius:8px;padding:10px;color:#00c896;font-size:13px">✅ Report downloaded!</div>';
   }, 2000);
 }
 
@@ -828,7 +828,7 @@ async function loadNotifyList(){
   const office = document.getElementById('notifyOffice').value;
   const listEl = document.getElementById('notifyList');
   const statsEl = document.getElementById('notifyStats');
-  if(!week){ listEl.innerHTML = '<div style="color:var(--r-muted);padding:20px;font-size:13px">⚠️ Pehle week select karo</div>'; return; }
+  if(!week){ listEl.innerHTML = '<div style="color:var(--r-muted);padding:20px;font-size:13px">⚠️ Please select a week first</div>'; return; }
 
   listEl.innerHTML = '<div style="color:var(--r-muted);padding:20px;font-size:13px">⏳ Loading...</div>';
   try{
@@ -839,9 +839,9 @@ async function loadNotifyList(){
     const data = await res.json();
     if(!data.success){ listEl.innerHTML = '<div style="color:#ef4444;padding:20px">❌ ' + (data.error||'Error') + '</div>'; return; }
     const emps = data.employees || [];
-    statsEl.innerHTML = `<span style="color:var(--r-accent)">✅ ${emps.length} employees</span> ke liye roster ready hai`;
+    statsEl.innerHTML = `<span style="color:var(--r-accent)">✅ ${emps.length} employees</span> have a roster ready`;
     if(!emps.length){
-      listEl.innerHTML = '<div style="color:var(--r-muted);padding:20px;font-size:13px">⚠️ Is week kisi ka roster nahi mila. Pehle Apply to Month karo.</div>';
+      listEl.innerHTML = '<div style="color:var(--r-muted);padding:20px;font-size:13px">⚠️ No roster found for this week. Please Apply to Month first.</div>';
       return;
     }
     listEl.innerHTML = emps.map(e => `
@@ -980,8 +980,8 @@ async function deleteTemplate(){
   // Get id from inline form
   const idEl = document.getElementById('itmplId');
   const tid = idEl ? idEl.value : '';
-  if(!tid){ alert('Koi template select nahi hai!'); return; }
-  if(!confirm('Ye template delete karna chahte ho?')) return;
+  if(!tid){ alert('No template selected!'); return; }
+  if(!confirm('Are you sure you want to delete this template?')) return;
   try{
     const res=await fetch('/api/roster/templates/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:parseInt(tid)})});
     const data=await res.json();
@@ -1031,7 +1031,7 @@ function renderMappingTable(){
     return true;
   });
   const tbody=document.getElementById('mappingTableBody');
-  if(!filtered.length){tbody.innerHTML='<tr><td colspan="14" class="text-center py-4 text-muted">Koi employee nahi mila</td></tr>';return;}
+  if(!filtered.length){tbody.innerHTML='<tr><td colspan="14" class="text-center py-4 text-muted">No employees found</td></tr>';return;}
   tbody.innerHTML=filtered.map(e=>{
     const m=byId[e.emp_id];
     const tmplName=m?(m.rule_name||'Custom'):'';
@@ -1058,14 +1058,14 @@ function rebuildTemplateSelects(){
 function updateNoMapAlert(){
   const mappedIds=new Set(allMappings.map(m=>m.emp_id));
   const noMap=allEmpsFull.filter(e=>e.status==='active'&&!mappedIds.has(e.emp_id));
-  document.getElementById('noMapMsg').textContent=noMap.length+' employees ki mapping nahi hai.';
+  document.getElementById('noMapMsg').textContent=noMap.length+' employees have no mapping.';
   document.getElementById('noMapAlert').classList.toggle('d-none',!noMap.length);
 }
 function showUnmappedEmployees(){
   const mappedIds=new Set(allMappings.map(m=>m.emp_id));
   const noMap=allEmpsFull.filter(e=>e.status==='active'&&!mappedIds.has(e.emp_id));
-  if(!noMap.length){alert('Sab mapped hain!');return;}
-  alert('Mapping nahi hai:\n'+noMap.map(e=>e.emp_id+' - '+e.name).join('\n'));
+  if(!noMap.length){alert('All employees are mapped!');return;}
+  alert('Not mapped:\n'+noMap.map(e=>e.emp_id+' - '+e.name).join('\n'));
 }
 function openAssignModalEnc(empId,empNameEnc,mJsonEnc){
   const empName=decodeURIComponent(empNameEnc);
@@ -1087,7 +1087,7 @@ function showAssignPreview(){
 }
 async function saveAssignment(){
   const emp_id=document.getElementById('assignEmpId').value;
-  const tid=document.getElementById('assignTemplateSelect').value;if(!tid){alert('Template select karo');return;}
+  const tid=document.getElementById('assignTemplateSelect').value;if(!tid){alert('Please select a template');return;}
   const t=allTemplates.find(x=>String(x.id)===String(tid));if(!t)return;
   const payload={emp_id,rule_name:t.name,notes:'',...Object.fromEntries(DAYS.map(d=>[d,t[d]]))};
   const res=await fetch('/api/roster/rules/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
@@ -1119,11 +1119,11 @@ function showBulkPreview(){
 }
 async function saveBulkMapping(){
   const emp_ids=[...document.querySelectorAll('.bmap-check:checked')].map(c=>c.value);
-  if(!emp_ids.length){alert('Koi employee select nahi kiya!');return;}
+  if(!emp_ids.length){alert('No employees selected!');return;}
   const tid=document.getElementById('bulkMapTemplate').value;
-  if(!tid){alert('Pehle template select karo!');return;}
+  if(!tid){alert('Please select a template first!');return;}
   const t=allTemplates.find(x=>String(x.id)===String(tid));
-  if(!t){alert('Template not found! Page refresh karo aur dobara try karo.');return;}
+  if(!t){alert('Template not found! Please refresh the page and try again.');return;}
   const payload={
     emp_ids,
     rule_name:t.name,
