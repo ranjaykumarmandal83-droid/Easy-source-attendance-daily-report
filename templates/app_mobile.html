@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -156,7 +156,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
   <div class="login-form">
     <div class="form-group">
       <label class="form-label">Employee ID / Username</label>
-      <input class="form-input" id="l_user" type="text" placeholder="Emp ID ya username" autocomplete="username" autocapitalize="none">
+      <input class="form-input" id="l_user" type="text" placeholder="Emp ID or Username" autocomplete="username" autocapitalize="none">
     </div>
     <div class="form-group">
       <label class="form-label">Password</label>
@@ -165,7 +165,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
     <div class="login-err" id="l_err"></div>
     <button class="btn-primary" id="l_btn" onclick="doLogin()">Sign In →</button>
     <div style="text-align:center;margin-top:14px">
-      <a href="/forgot-password" style="color:var(--muted);font-size:12px">🔐 Password bhool gaye?</a>
+      <a href="/forgot-password" style="color:var(--muted);font-size:12px">🔐 Forgot Password?</a>
     </div>
   </div>
 </div>
@@ -199,8 +199,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
       <div id="installBanner" class="hidden">
         <div style="font-size:24px">📲</div>
         <div style="flex:1">
-          <div style="font-size:13px;font-weight:700;color:var(--accent)">App Install Karo</div>
-          <div style="font-size:11px;color:var(--muted)">Home screen par add karo ek click mein</div>
+          <div style="font-size:13px;font-weight:700;color:var(--accent)">Install App</div>
+          <div style="font-size:11px;color:var(--muted)">Add to home screen in one click</div>
         </div>
         <button onclick="installApp()" style="background:var(--accent);color:#0a0e1a;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer">Install</button>
         <button onclick="document.getElementById('installBanner').classList.add('hidden')" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:0 4px">×</button>
@@ -208,14 +208,14 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 
       <!-- Today's Status -->
       <div class="card">
-        <div class="sec-title">Aaj Ki Attendance</div>
+        <div class="sec-title">Today's Attendance</div>
         <div id="todayStatus" style="text-align:center;padding:8px 0">
           <div style="font-size:13px;color:var(--muted)">Loading...</div>
         </div>
       </div>
 
       <!-- Quick Stats -->
-      <div class="sec-title">Is Mahine Ka Summary</div>
+      <div class="sec-title">This Month's Summary</div>
       <div class="stat-row">
         <div class="stat-card"><div class="stat-num" id="s_present" style="color:var(--P)">—</div><div class="stat-lbl">✅ Present</div></div>
         <div class="stat-card"><div class="stat-num" id="s_absent" style="color:var(--A)">—</div><div class="stat-lbl">❌ Absent</div></div>
@@ -225,13 +225,13 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 
       <!-- Quick Mark Button -->
       <button class="btn-primary" onclick="showPage('mark')" style="margin-top:4px">
-        📍 Attendance Mark Karo
+        📍 Mark Attendance
       </button>
     </div>
 
     <!-- MARK TAB -->
     <div class="page" id="page-mark">
-      <div class="sec-title">Attendance Mark Karo</div>
+      <div class="sec-title">Mark Attendance</div>
 
       <!-- Employee info -->
       <div class="card" id="empCard" style="display:none">
@@ -250,13 +250,13 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
           <span style="font-size:13px;font-weight:700">📍 Location & Time</span>
           <span id="liveClock" style="font-size:12px;color:var(--muted)"></span>
         </div>
-        <div id="locBadge"><span class="loc-badge loc-checking">⏳ Location fetch ho rahi hai...</span></div>
+        <div id="locBadge"><span class="loc-badge loc-checking">⏳ Fetching location...</span></div>
         <div id="locAddr" style="font-size:11px;color:var(--muted);margin-top:4px"></div>
         <div id="locMapLink" style="margin-top:4px"></div>
       </div>
 
       <!-- Status buttons -->
-      <div class="sec-title">Status Select Karo</div>
+      <div class="sec-title">Select Status</div>
       <div class="status-grid">
         <button class="status-btn s-P" onclick="selStatus('P')"><span class="icon">✅</span>Present</button>
         <button class="status-btn s-WFH" onclick="selStatus('WFH')"><span class="icon">🏠</span>WFH</button>
@@ -302,16 +302,16 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 
       <!-- Change Password -->
       <div class="card">
-        <div class="sec-title">Password Change Karo</div>
+        <div class="sec-title">Change Password</div>
         <div class="form-group">
-          <label class="form-label">Purana Password</label>
+          <label class="form-label">Current Password</label>
           <input class="form-input" id="oldPw" type="password" placeholder="Current password">
         </div>
         <div class="form-group">
-          <label class="form-label">Naya Password</label>
+          <label class="form-label">New Password</label>
           <input class="form-input" id="newPw" type="password" placeholder="Min 4 characters">
         </div>
-        <button class="btn-primary" onclick="changePw()">🔐 Password Update Karo</button>
+        <button class="btn-primary" onclick="changePw()">🔐 Update Password</button>
         <div id="pwMsg" style="margin-top:8px;text-align:center;font-size:13px"></div>
       </div>
 
@@ -395,7 +395,7 @@ function doLogin(){
   var p = document.getElementById('l_pass').value.trim();
   var err = document.getElementById('l_err');
   var btn = document.getElementById('l_btn');
-  if(!u || !p){ err.textContent = 'Username aur password zaroori hain'; return; }
+  if(!u || !p){ err.textContent = 'Username and password are required'; return; }
   btn.disabled = true; btn.textContent = 'Signing in...';
   err.textContent = '';
   var fd = new FormData();
@@ -479,7 +479,7 @@ function loadTodayStatus(){
         + (rec.remark ? '<div style="font-size:12px;color:var(--muted);margin-top:6px">📝 ' + rec.remark + '</div>' : '')
         + '<div style="font-size:11px;color:var(--muted);margin-top:4px">Marked at: ' + (rec.marked_at||'').substring(11,16) + '</div>';
     } else {
-      el.innerHTML = '<div style="color:var(--muted);font-size:13px">❓ Aaj ki attendance mark nahi hui</div><button onclick="showPage(\'mark\')" style="margin-top:8px;background:rgba(0,200,150,.15);color:var(--accent);border:1px solid rgba(0,200,150,.3);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer">Mark Karo →</button>';
+      el.innerHTML = '<div style="color:var(--muted);font-size:13px">❓ Attendance not marked today</div><button onclick="showPage(\'mark\')" style="margin-top:8px;background:rgba(0,200,150,.15);color:var(--accent);border:1px solid rgba(0,200,150,.3);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer">Mark Now →</button>';
     }
   });
 }
@@ -489,7 +489,7 @@ function loadHistory(){
   var from = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
   var to = today.toISOString().split('T')[0];
   var empId = appState.user ? appState.user.emp_id : null;
-  if(!empId){ document.getElementById('histList').innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px">Employee ID linked nahi hai</div>'; return; }
+  if(!empId){ document.getElementById('histList').innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px">No Employee ID linked</div>'; return; }
 
   fetch('/api/attendance/emp-history', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({emp_id:empId, from_date:from, to_date:to})})
   .then(function(r){ return r.json(); })
@@ -506,7 +506,7 @@ function loadHistory(){
     // History list
     var labels = {P:'Present',A:'Absent',OD:'On Duty',WFH:'Work From Home',HD:'Half Day',L:'Leave',WO:'Week Off'};
     var emojis = {P:'✅',A:'❌',OD:'🚗',WFH:'🏠',HD:'🌓',L:'🏖️',WO:'🔴'};
-    if(!recs.length){ document.getElementById('histList').innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px">Is mahine koi record nahi</div>'; return; }
+    if(!recs.length){ document.getElementById('histList').innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px">No records this month</div>'; return; }
     var html = '<div class="card">';
     recs.forEach(function(r){
       var d = new Date(r.date);
@@ -516,7 +516,7 @@ function loadHistory(){
     html += '</div>';
     document.getElementById('histList').innerHTML = html;
   }).catch(function(){
-    document.getElementById('histList').innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px">History load nahi hui</div>';
+    document.getElementById('histList').innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px">Failed to load history</div>';
   });
 }
 
@@ -564,7 +564,7 @@ function markAttendance(){
     if(d.success){
       var locMsg = d.location_status === 'in_range' ? '✅ In Range' : d.location_status === 'out_of_range' ? '⚠️ Out of Range' : '';
       document.getElementById('markResult').innerHTML = '<div style="color:var(--P);font-weight:700;font-size:15px">✅ Attendance Saved!</div><div style="color:var(--muted);font-size:12px;margin-top:4px">' + d.time + (locMsg ? ' · ' + locMsg : '') + '</div>';
-      showToast('Attendance mark ho gayi! ' + appState.selStatus);
+      showToast('Attendance marked! ' + appState.selStatus);
       loadTodayStatus();
       loadHistory();
     } else {
@@ -604,13 +604,13 @@ function updateLocUI(status){
   var mapLink = document.getElementById('locMapLink');
   if(!badge) return;
   var html = '', addrHtml = '', mapHtml = '';
-  if(status==='checking')   html = '<span class="loc-badge loc-checking">⏳ Location fetch ho rahi hai...</span>';
-  if(status==='denied')     html = '<span class="loc-badge loc-out">❌ Location denied — Settings se allow karo</span>';
-  if(status==='unsupported')html = '<span class="loc-badge loc-out">❌ Location support nahi</span>';
+  if(status==='checking')   html = '<span class="loc-badge loc-checking">⏳ Fetching location...</span>';
+  if(status==='denied')     html = '<span class="loc-badge loc-out">❌ Location denied — allow in Settings</span>';
+  if(status==='unsupported')html = '<span class="loc-badge loc-out">❌ Location not supported</span>';
   if(status==='got' && appState.geoData){
-    html = '<span class="loc-badge loc-in">✅ Location mila · ~' + Math.round(appState.geoData.accuracy||0) + 'm accuracy</span>';
+    html = '<span class="loc-badge loc-in">✅ Location obtained · ~' + Math.round(appState.geoData.accuracy||0) + 'm accuracy</span>';
     if(appState.geoData.address) addrHtml = '📍 ' + appState.geoData.address;
-    mapHtml = '<a href="https://maps.google.com?q='+appState.geoData.latitude+','+appState.geoData.longitude+'" target="_blank" style="font-size:11px;color:var(--accent2)">🗺 Map pe dekho</a>';
+    mapHtml = '<a href="https://maps.google.com?q='+appState.geoData.latitude+','+appState.geoData.longitude+'" target="_blank" style="font-size:11px;color:var(--accent2)">🗺 View on Map</a>';
   }
   badge.innerHTML = html;
   addr.textContent = addrHtml;
@@ -650,12 +650,12 @@ function changePw(){
   var op = document.getElementById('oldPw').value.trim();
   var np = document.getElementById('newPw').value.trim();
   var msg = document.getElementById('pwMsg');
-  if(!op || !np){ msg.innerHTML = '<span style="color:#ef4444">Sab fields bharo</span>'; return; }
+  if(!op || !np){ msg.innerHTML = '<span style="color:#ef4444">All fields are required</span>'; return; }
   fetch('/api/users/change_password', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({old_password:op, new_password:np})})
   .then(function(r){ return r.json(); })
   .then(function(d){
     if(d.success){
-      msg.innerHTML = '<span style="color:var(--P)">✅ Password change ho gaya!</span>';
+      msg.innerHTML = '<span style="color:var(--P)">✅ Password changed successfully!</span>';
       document.getElementById('oldPw').value = '';
       document.getElementById('newPw').value = '';
       showToast('Password updated!');

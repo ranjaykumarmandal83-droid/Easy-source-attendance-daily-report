@@ -137,13 +137,13 @@
         </button>
         {% if session.role == 'admin' %}
           {% if emp.emp_id in head_ids %}
-          <button class="btn btn-sm" style="background:rgba(245,158,11,.15);color:#f59e0b;border:1px solid rgba(245,158,11,.3);cursor:default" title="Already Head hai">
+          <button class="btn btn-sm" style="background:rgba(245,158,11,.15);color:#f59e0b;border:1px solid rgba(245,158,11,.3);cursor:default" title="Already a Head">
             👑
           </button>
           {% else %}
           <button class="btn btn-sm" style="background:rgba(0,200,150,.08);color:var(--accent);border:1px solid rgba(0,200,150,.2)"
             onclick="openMakeHead('{{ emp.emp_id }}','{{ emp.name|e }}','{{ emp.department|e }}')"
-            title="Head banao">
+            title="Make Head">
             👑
           </button>
           {% endif %}
@@ -223,7 +223,7 @@
         <input type="checkbox" id="f_is_head" style="width:16px;height:16px;accent-color:#f59e0b"
           onchange="toggleHeadSection()">
         <span style="font-size:13.5px;font-weight:600;color:#f59e0b">👑 Is Head?</span>
-        <span style="font-size:11px;color:var(--muted)">(Roster assign karne ka right milega)</span>
+        <span style="font-size:11px;color:var(--muted)">(Will have roster assignment rights)</span>
         <span id="f_head_badge" style="display:none;font-size:10px;padding:2px 8px;border-radius:10px;
           background:rgba(245,158,11,.2);color:#f59e0b;border:1px solid rgba(245,158,11,.3);font-weight:700">
           Already Head ✓
@@ -232,7 +232,7 @@
 
       <div id="headLinkSection" style="display:none;margin-top:12px">
         <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;display:flex;align-items:center;justify-content:space-between">
-          <span>Link Employees <span style="color:var(--text2)">(jinki roster yeh manage karega)</span></span>
+          <span>Link Employees <span style="color:var(--text2)">(whose roster this employee will manage)</span></span>
           <span id="f_link_count" style="color:var(--accent)">0 selected</span>
         </label>
         <input class="form-control" id="f_link_search" placeholder="🔍 Search name, dept, ID..."
@@ -261,17 +261,17 @@
     <div style="background:rgba(0,200,150,0.06);border:1px solid rgba(0,200,150,.25);border-radius:10px;padding:14px;margin-bottom:16px">
       <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:8px">📋 Excel Format</div>
       <div style="font-size:12px;color:var(--muted);margin-bottom:10px">
-        <b style="color:var(--accent)">Zaroori:</b> emp_id, name, designation, department<br>
+        <b style="color:var(--accent)">Required:</b> emp_id, name, designation, department<br>
         <b style="color:var(--text)">Optional:</b> location, office_setting, phone, email, join_date, status, gender<br>
-        <span style="color:#ffb74d;font-size:11px">⚠️ CSV file download hogi — Excel mein open ho jaayegi</span>
+        <span style="color:#ffb74d;font-size:11px">⚠️ A CSV file will be downloaded — open it in Excel</span>
       </div>
       <button class="btn btn-secondary btn-sm" onclick="downloadCSV()" style="width:100%">
-        ⬇️ Sample Format Download Karo (CSV)
+        ⬇️ Download Sample Format (CSV)
       </button>
     </div>
 
     <div class="form-group">
-      <label>📂 Apni Excel / CSV File Upload Karo</label>
+      <label>📂 Upload Your Excel / CSV File</label>
       <input class="form-control" id="bulkFile" type="file" accept=".csv,.xlsx,.xls">
     </div>
 
@@ -290,7 +290,7 @@
 <!-- MAKE HEAD MODAL -->
 <div class="modal-overlay" id="makeHeadModal">
   <div class="modal" style="max-width:560px">
-    <h3>👑 Head Banao</h3>
+    <h3>👑 Make Head</h3>
 
     <div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);
       border-radius:10px;padding:12px 14px;margin-bottom:16px">
@@ -300,7 +300,7 @@
 
     <div class="form-group">
       <label style="display:flex;align-items:center;justify-content:space-between">
-        <span>Employees Link Karo <span style="color:var(--muted);font-weight:400">(jinki roster/attendance manage karega)</span></span>
+        <span>Link Employees <span style="color:var(--muted);font-weight:400">(whose roster/attendance this head will manage)</span></span>
         <span style="font-size:11px;color:var(--accent);font-weight:600" id="mh_count">0 selected</span>
       </label>
       <input class="form-control" id="mh_search" placeholder="🔍 Name, ID, Dept..."
@@ -315,7 +315,7 @@
     <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:12px">
       <button class="btn btn-secondary" onclick="closeModal('makeHeadModal')">Cancel</button>
       <button class="btn btn-primary" onclick="confirmMakeHead()" style="background:linear-gradient(135deg,#f59e0b,#d97706);box-shadow:0 4px 14px rgba(245,158,11,.3)">
-        👑 Head Bana Do
+        👑 Confirm Head
       </button>
     </div>
   </div>
@@ -450,7 +450,7 @@ function editEmp(emp) {
 // ── Save (add or edit) ──
 async function saveEmployee() {
   const name = document.getElementById('f_name').value.trim();
-  if (!name) { showToast('Name zaroori hai', 'error'); return; }
+  if (!name) { showToast('Name is required', 'error'); return; }
   const data = {
     emp_id:         document.getElementById('f_emp_id').value.trim(),
     name:           name,
@@ -462,7 +462,7 @@ async function saveEmployee() {
     location:       document.getElementById('f_location').value,
     office_setting: document.getElementById('f_office_setting').value,
   };
-  if (!data.emp_id) { showToast('Employee ID zaroori hai', 'error'); return; }
+  if (!data.emp_id) { showToast('Employee ID is required', 'error'); return; }
   const url = editingId ? '/api/employees/edit' : '/api/employees/add';
   if (editingId) data.id = editingId;
   const res = await api(url, data);
@@ -476,7 +476,7 @@ async function saveEmployee() {
 
 // ── Delete ──
 async function deleteEmp(id, name) {
-  if (!confirm(`"${name}" ko delete karna chahte ho?`)) return;
+  if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
   const res = await api('/api/employees/delete', {id});
   if (res.success) { showToast('Employee removed'); setTimeout(() => location.reload(), 800); }
 }
@@ -534,7 +534,7 @@ document.getElementById('bulkFile') && document.getElementById('bulkFile').addEv
       const uploadBtn = document.getElementById('uploadBtn');
 
       if (!bulkData.length) {
-        preview.innerHTML = '<p style="color:#f87171;font-size:12px">⚠️ Koi data nahi mila. Check karo ki Row 1 mein headers hain.</p>';
+        preview.innerHTML = '<p style="color:#f87171;font-size:12px">⚠️ No data found. Make sure Row 1 contains headers.</p>';
         uploadBtn.disabled = true;
         return;
       }
@@ -543,7 +543,7 @@ document.getElementById('bulkFile') && document.getElementById('bulkFile').addEv
       const keys = Object.keys(bulkData[0]);
       preview.innerHTML = `
         <p style="color:var(--accent);font-size:12px;margin-bottom:6px">
-          ✅ <b>${bulkData.length}</b> records mile | Columns: <span style="color:var(--muted)">${keys.join(', ')}</span>
+          ✅ <b>${bulkData.length}</b> records found | Columns: <span style="color:var(--muted)">${keys.join(', ')}</span>
         </p>
         <div style="overflow-x:auto">
         <table style="width:100%;font-size:11px;border-collapse:collapse">
@@ -561,7 +561,7 @@ document.getElementById('bulkFile') && document.getElementById('bulkFile').addEv
 });
 
 async function uploadBulk() {
-  if (!bulkData.length) { showToast('Pehle file select karo', 'error'); return; }
+  if (!bulkData.length) { showToast('Please select a file first', 'error'); return; }
   const btn = document.getElementById('uploadBtn');
   btn.textContent = '⏳ Importing...';
   btn.disabled = true;
@@ -575,7 +575,7 @@ async function uploadBulk() {
       statusEl.style.display = 'block';
       statusEl.style.background = 'rgba(0,200,150,.1)';
       statusEl.style.color = 'var(--accent)';
-      statusEl.innerHTML = `✅ <b>${res.added}</b> employees import ho gaye!
+      statusEl.innerHTML = `✅ <b>${res.added}</b> employees imported successfully!
         ${res.skipped ? ` | ⏭️ ${res.skipped} rows skip` : ''}
         ${res.errors && res.errors.length ? `<br>⚠️ Errors: ${res.errors.join(', ')}` : ''}`;
       bulkData = [];
@@ -617,7 +617,7 @@ function downloadCSV() {
   document.body.appendChild(a);
   a.click();
   setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
-  showToast('✅ CSV download ho gaya! Excel mein kholo.');
+  showToast('✅ CSV downloaded! Open in Excel.');
 }
 
 
@@ -654,7 +654,7 @@ function renderMhList() {
            (e.department||'').toLowerCase().includes(q))
   );
   if (!filtered.length) {
-    el.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:8px;text-align:center">Koi employee nahi mila</div>';
+    el.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:8px;text-align:center">No employees found</div>';
     return;
   }
   el.innerHTML = filtered.map(e => {
@@ -693,7 +693,7 @@ async function confirmMakeHead() {
     linked_emp_ids: [...mhSelected]
   });
 
-  btn.innerHTML = '👑 Head Bana Do'; btn.disabled = false;
+  btn.innerHTML = '👑 Confirm Head'; btn.disabled = false;
 
   if (res.success) {
     showToast(res.message || '✅ Head ban gaya!');

@@ -168,7 +168,7 @@
           <th>Date</th><th>Status</th><th>Time</th><th>Location</th><th>Remark</th><th>Marked By</th>
         </tr></thead>
         <tbody id="histBody">
-          <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px">Employee aur date range select karo</td></tr>
+          <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px">Select an employee and date range</td></tr>
         </tbody>
       </table>
     </div>
@@ -282,12 +282,12 @@ async function saveBulk() {
   const records = Object.entries(statusMap).map(([emp_id, status]) => ({
     emp_id, status, remark: (document.getElementById('remark-'+emp_id)||{}).value || ''
   }));
-  if(!records.length){ showToast('Kuch mark karo pehle', 'error'); return; }
+  if(!records.length){ showToast('Nothing to save yet', 'error'); return; }
   const btn = event.target;
   btn.innerHTML = '⏳ Saving...'; btn.disabled = true;
   const res = await api('/api/attendance/bulk', {date, records});
   btn.innerHTML = '💾 Save All'; btn.disabled = false;
-  if(res.success) showToast(`✅ ${records.length} records save ho gaye!`);
+  if(res.success) showToast(`✅ ${records.length} records saved!`);
   else showToast('Error saving', 'error');
 }
 
@@ -330,7 +330,7 @@ document.getElementById('bulkAttFile').addEventListener('change', function() {
 async function submitBulkAtt() {
   const file = document.getElementById('bulkAttFile').files[0];
   const date = document.getElementById('bulkAttDate').value;
-  if(!file || !date){ showToast('File aur date select karo', 'error'); return; }
+  if(!file || !date){ showToast('Please select a file and date', 'error'); return; }
   const text = await file.text();
   const lines = text.split('\n').filter(l => l.trim());
   const records = [];
@@ -342,10 +342,10 @@ async function submitBulkAtt() {
       remark: (parts[2]||'').trim().replace(/"/g,'')
     });
   }
-  if(!records.length){ showToast('Koi valid records nahi', 'error'); return; }
+  if(!records.length){ showToast('No valid records found', 'error'); return; }
   const res = await api('/api/attendance/bulk', {date, records});
   if(res.success) {
-    showToast(`✅ ${records.length} records upload ho gaye!`);
+    showToast(`✅ ${records.length} records uploaded!`);
     closeModal('bulkAttModal');
     loadAttendance();
   } else showToast('Error: ' + (res.error||'Failed'), 'error');
@@ -358,7 +358,7 @@ function downloadBulkTemplate() {
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob); a.download = 'Attendance_Bulk_Format.csv';
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  showToast('✅ Template download ho gaya!');
+  showToast('✅ Template downloaded!');
 }
 
 // ── EMP HISTORY ──
@@ -370,8 +370,8 @@ async function loadEmpHistory() {
   const empId = document.getElementById('histEmpId').value;
   const from  = document.getElementById('histFrom').value;
   const to    = document.getElementById('histTo').value;
-  if(!empId){ showToast('Employee select karo', 'error'); return; }
-  if(!from || !to){ showToast('Date range select karo', 'error'); return; }
+  if(!empId){ showToast('Please select an employee', 'error'); return; }
+  if(!from || !to){ showToast('Please select a date range', 'error'); return; }
 
   const records = await api('/api/attendance/emp-history', {emp_id: empId, from_date: from, to_date: to});
 
@@ -389,7 +389,7 @@ async function loadEmpHistory() {
   const stCls = {P:'present', A:'absent', OD:'od', L:'leave', WFH:'wo'};
   const tbody = document.getElementById('histBody');
   if(!records.length) {
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">Koi records nahi</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">No records found</td></tr>';
     return;
   }
   tbody.innerHTML = records.map(r => {
