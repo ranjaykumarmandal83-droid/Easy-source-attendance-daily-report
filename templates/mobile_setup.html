@@ -15,88 +15,88 @@
 {% block content %}
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
   <div class="card qr-card">
-    <h3 style="margin-bottom:8px">📱 Employees के लिए Mobile URL</h3>
-    <p style="color:var(--muted);font-size:14px">नीचे QR scan करें या URL share करें</p>
-    
+    <h3 style="margin-bottom:8px">📱 Mobile URL for Employees</h3>
+    <p style="color:var(--muted);font-size:14px">Scan the QR below or share the URL</p>
+
     <div id="qrContainer" class="qr-img">
       <canvas id="qrCanvas" width="200" height="200"></canvas>
     </div>
-    
+
     <div class="url-box" id="mobileUrl">Loading...</div>
-    
+
     <div style="display:flex;gap:10px;justify-content:center">
-      <button class="btn btn-primary" onclick="copyUrl()">📋 URL Copy करें</button>
-      <button class="btn btn-secondary" onclick="window.open(document.getElementById('mobileUrl').textContent.trim(), '_blank')">🔗 Open करें</button>
+      <button class="btn btn-primary" onclick="copyUrl()">📋 Copy URL</button>
+      <button class="btn btn-secondary" onclick="window.open(document.getElementById('mobileUrl').textContent.trim(), '_blank')">🔗 Open</button>
     </div>
-    
+
     <div style="margin-top:20px;padding:14px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:10px;font-size:13px;color:#fcd34d">
-      ⚠️ सभी devices एक ही WiFi पर होने चाहिए <br>OR ngrok URL use करें बाहर से access के लिए
+      ⚠️ All devices must be on the same WiFi <br>OR use an ngrok URL for external access
     </div>
   </div>
-  
+
   <div class="card">
-    <h3 style="margin-bottom:20px">📋 Employee को कैसे बताएं?</h3>
+    <h3 style="margin-bottom:20px">📋 How to share with employees?</h3>
     <div class="steps">
       <div class="step">
         <div class="step-num">1</div>
         <div>
-          <strong>WhatsApp पर URL भेजें</strong><br>
-          <span style="font-size:13px;color:var(--muted)">नीचे का URL copy करके WhatsApp group में paste करें</span>
+          <strong>Send URL via WhatsApp</strong><br>
+          <span style="font-size:13px;color:var(--muted)">Copy the URL below and paste it in the WhatsApp group</span>
         </div>
       </div>
       <div class="step">
         <div class="step-num">2</div>
         <div>
-          <strong>Employee browser में खोले</strong><br>
-          <span style="font-size:13px;color:var(--muted)">Chrome या Safari में URL type करें</span>
+          <strong>Employee opens it in browser</strong><br>
+          <span style="font-size:13px;color:var(--muted)">Type the URL in Chrome or Safari</span>
         </div>
       </div>
       <div class="step">
         <div class="step-num">3</div>
         <div>
-          <strong>Login करें</strong><br>
-          <span style="font-size:13px;color:var(--muted)">Settings में उनका username/password बनाएं</span>
+          <strong>Login</strong><br>
+          <span style="font-size:13px;color:var(--muted)">Create their username/password in Settings</span>
         </div>
       </div>
       <div class="step">
         <div class="step-num">4</div>
         <div>
-          <strong>"Add to Home Screen" करें</strong><br>
-          <span style="font-size:13px;color:var(--muted)">Browser menu → Add to Home Screen → App icon बन जाएगा</span>
+          <strong>Add to Home Screen</strong><br>
+          <span style="font-size:13px;color:var(--muted)">Browser menu → Add to Home Screen → App icon will be created</span>
         </div>
       </div>
     </div>
-    
+
     <div style="margin-top:20px;padding:16px;background:rgba(0,212,170,0.06);border-radius:12px">
       <strong style="color:var(--accent)">💬 WhatsApp Message Template:</strong>
       <div id="waMsg" style="margin-top:10px;padding:12px;background:rgba(255,255,255,0.04);border-radius:8px;font-size:13px;line-height:1.7;color:var(--text)">Loading...</div>
-      <button class="btn btn-secondary btn-sm" style="margin-top:10px" onclick="copyWAMsg()">📋 Message Copy करें</button>
+      <button class="btn btn-secondary btn-sm" style="margin-top:10px" onclick="copyWAMsg()">📋 Copy Message</button>
     </div>
   </div>
 </div>
 
 <!-- Ngrok setup card -->
 <div class="card" style="margin-top:20px">
-  <div class="card-header"><span class="card-title">🌐 Internet से Access – ngrok Setup</span></div>
+  <div class="card-header"><span class="card-title">🌐 Internet Access – ngrok Setup</span></div>
   <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
     <div style="padding:16px;background:rgba(255,255,255,0.03);border-radius:12px">
       <div style="font-size:24px;margin-bottom:8px">1️⃣</div>
-      <strong>ngrok Download करें</strong>
-      <p style="font-size:13px;color:var(--muted);margin-top:6px">ngrok.com पर जाएं → Free account बनाएं → Download करें</p>
+      <strong>Download ngrok</strong>
+      <p style="font-size:13px;color:var(--muted);margin-top:6px">Go to ngrok.com → Create free account → Download</p>
       <a href="https://ngrok.com/download" target="_blank" class="btn btn-secondary btn-sm" style="margin-top:10px">Download →</a>
     </div>
     <div style="padding:16px;background:rgba(255,255,255,0.03);border-radius:12px">
       <div style="font-size:24px;margin-bottom:8px">2️⃣</div>
-      <strong>CMD में Run करें</strong>
-      <p style="font-size:13px;color:var(--muted);margin-top:6px">HRMS चालू होने के बाद CMD में यह command:</p>
+      <strong>Run in CMD</strong>
+      <p style="font-size:13px;color:var(--muted);margin-top:6px">Once HRMS is running, enter this command in CMD:</p>
       <div style="background:#0a0e1a;border-radius:8px;padding:10px;font-family:monospace;font-size:13px;color:var(--accent);margin-top:8px">ngrok http 5000</div>
     </div>
     <div style="padding:16px;background:rgba(255,255,255,0.03);border-radius:12px">
       <div style="font-size:24px;margin-bottom:8px">3️⃣</div>
-      <strong>URL मिलेगी ऐसी</strong>
-      <p style="font-size:13px;color:var(--muted);margin-top:6px">ngrok आपको एक URL देगा:</p>
+      <strong>You will get a URL like this</strong>
+      <p style="font-size:13px;color:var(--muted);margin-top:6px">ngrok will give you a public URL:</p>
       <div style="background:#0a0e1a;border-radius:8px;padding:10px;font-family:monospace;font-size:12px;color:#a5b4fc;margin-top:8px">https://abc123.ngrok-free.app</div>
-      <p style="font-size:12px;color:var(--muted);margin-top:6px">इसमें /mobile लगाकर share करें</p>
+      <p style="font-size:12px;color:var(--muted);margin-top:6px">Append /mobile to this URL and share it</p>
     </div>
   </div>
 </div>
@@ -108,7 +108,7 @@
   // Get current server IP
   const localUrl = `${location.protocol}//${location.hostname}:${location.port || 5000}/mobile`;
   document.getElementById('mobileUrl').textContent = localUrl;
-  
+
   // Generate QR
   new QRCode(document.getElementById('qrCanvas'), {
     text: localUrl,
@@ -117,24 +117,24 @@
     colorLight: '#111827',
     correctLevel: QRCode.CorrectLevel.M
   });
-  
+
   // WhatsApp template
   document.getElementById('waMsg').innerHTML = `
     📱 *EasySource HRMS – Attendance App*<br><br>
-    नीचे दिए link से अपनी attendance mark करें:<br>
+    Click the link below to mark your attendance:<br>
     🔗 *${localUrl}*<br><br>
-    • अपना username & password use करें<br>
-    • Browser में खोलें (Chrome best है)<br>
-    • "Add to Home Screen" से app बनाएं<br><br>
-    किसी भी problem के लिए admin को contact करें।`;
+    • Use your username &amp; password<br>
+    • Open in browser (Chrome recommended)<br>
+    • Use "Add to Home Screen" to create an app icon<br><br>
+    Contact admin for any issues.`;
 
   function copyUrl() {
     navigator.clipboard.writeText(localUrl);
     showToast('URL copied!');
   }
-  
+
   function copyWAMsg() {
-    const msg = `📱 *EasySource HRMS – Attendance App*\n\nनीचे दिए link से अपनी attendance mark करें:\n🔗 *${localUrl}*\n\n• अपना username & password use करें\n• Browser में खोलें (Chrome best है)\n• "Add to Home Screen" से app बनाएं`;
+    const msg = `📱 *EasySource HRMS – Attendance App*\n\nClick the link below to mark your attendance:\n🔗 *${localUrl}*\n\n• Use your username & password\n• Open in browser (Chrome recommended)\n• Use "Add to Home Screen" to create an app icon`;
     navigator.clipboard.writeText(msg);
     showToast('WhatsApp message copied!');
   }
